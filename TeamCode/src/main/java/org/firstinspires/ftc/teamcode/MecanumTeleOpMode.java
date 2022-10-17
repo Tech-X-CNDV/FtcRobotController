@@ -3,11 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
+//import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+//import org.openftc.easyopencv.OpenCvCamera;
+//import org.openftc.easyopencv.OpenCvCameraFactory;
 
 @TeleOp
 
@@ -25,8 +26,8 @@ public class MecanumTeleOpMode extends OpMode {
     private double frontRightPower = 0;
     private double rearLeftPower = 0;
     private double rearRightPower = 0;
-    int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-    private WebcamName webcam = null;
+    //int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+    //private WebcamName webcam = null;
     //private OpenCvCamera camera = null;
 
     @Override
@@ -36,8 +37,13 @@ public class MecanumTeleOpMode extends OpMode {
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
         leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "rightRearMotor");
-        webcam = hardwareMap.get(WebcamName.class, "camera");
+        //webcam = hardwareMap.get(WebcamName.class, "camera");
        // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
+
+        rightFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.update();
     }
