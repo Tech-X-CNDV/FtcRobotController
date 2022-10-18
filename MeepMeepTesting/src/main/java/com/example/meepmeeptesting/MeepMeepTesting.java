@@ -23,7 +23,31 @@ public class MeepMeepTesting {
                                 .back(12)
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
                                 .forward(5)//lasare con nou
+
+                                //daca 1 sau 2
+                                .back(5)
+                                .turn(Math.toRadians(90))
+                                .forward(12)
+                                .back(35)
+                                .turn(Math.toRadians(-90))
+                                //.strafeRight(23)
+                                .forward(5)
+                                .back(5)
+                                .turn(Math.toRadians(90))
+                                .forward(35)
+                                .back(35)
+
+                                //.strafeRight(12)
+                                //.forward(20)
+
+                                //.strafeRight(20)
+                                //.forward(28)
+                               // .splineTo(new Vector2d(10,-34), Math.toRadians(180))
+
+
                                 .build()
+
+
                                 //dupa asta vine parcarea prin strafing
                 );
 
