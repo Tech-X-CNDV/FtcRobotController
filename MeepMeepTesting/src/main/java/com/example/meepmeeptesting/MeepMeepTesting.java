@@ -28,15 +28,11 @@ public class MeepMeepTesting {
                                 .back(5)
                                 .turn(Math.toRadians(90))
                                 .forward(12)
-                                .back(35)
-                                .turn(Math.toRadians(-90))
-                                //.strafeRight(23)
-                                .forward(5)
-                                .back(5)
-                                .turn(Math.toRadians(90))
-                                .forward(35)
-                                .back(35)
-
+                                //pt caz 1
+                                //.back(47)
+                                //pt caz 2
+                                .back(25)
+                                .turn(Math.toRadians(-135))
                                 //.strafeRight(12)
                                 //.forward(20)
 
