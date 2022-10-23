@@ -63,6 +63,7 @@ public class MecanumTeleOpMode extends OpMode {
 
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
+        claw.setPosition(0);
         liftMotor.setTargetPosition(400);
 
         webcam = hardwareMap.get(WebcamName.class, "camera");
@@ -73,8 +74,8 @@ public class MecanumTeleOpMode extends OpMode {
         leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.update();
     }
@@ -88,6 +89,7 @@ public class MecanumTeleOpMode extends OpMode {
     @Override
     public void loop(){
         int targetPosition = 300;
+        boolean clawExtended = false;
 
         leftStickForward = -this.gamepad1.left_stick_y;
         leftStickSide = this.gamepad1.left_stick_x * 1.1;
@@ -119,6 +121,19 @@ public class MecanumTeleOpMode extends OpMode {
         if (liftMotor.getCurrentPosition() == targetPosition)
             telemetry.addLine("EXTENDED");
 
+        //prindere gheara
+        if (this.gamepad1.x){
+            if(!clawExtended){
+                telemetry.addLine("Claw EXTENDED");
+                claw.setPosition(.5);
+                clawExtended = true;
+            } else {
+                telemetry.addLine("Claw RETRACTED");
+                claw.setPosition(0);
+                clawExtended = false;
+            }
+        }
+        telemetry.addData("Servo Position", claw.getPosition());
 
         leftFrontMotor.setPower(frontLeftPower);
         rightRearMotor.setPower(rearRightPower);
