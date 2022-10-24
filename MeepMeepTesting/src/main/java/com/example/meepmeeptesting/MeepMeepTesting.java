@@ -23,18 +23,18 @@ public class MeepMeepTesting {
                                 .back(12)
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
                                 .forward(5)//lasare con nou
-
-                                //daca 1 sau 2
                                 .back(5)
                                 .turn(Math.toRadians(90))
                                 .forward(12)
                                 //pt caz 1
-                                //.back(47)
+                                /*.back(47)
+                                .turn(Math.toRadians(-45))*/
                                 //pt caz 2
-                                .back(25)
-                                .turn(Math.toRadians(-135))
-                                //.strafeRight(12)
-                                //.forward(20)
+                                /*.back(25)
+                                .turn(Math.toRadians(-135))*/
+                                //pt caz 3
+                                .back(5)
+                                .turn(Math.toRadians((-125)))
 
                                 //.strafeRight(20)
                                 //.forward(28)

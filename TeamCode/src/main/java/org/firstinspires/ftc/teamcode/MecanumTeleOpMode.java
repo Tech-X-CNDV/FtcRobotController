@@ -19,8 +19,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
-
-
 @TeleOp
 
 public class MecanumTeleOpMode extends OpMode {
@@ -45,14 +43,18 @@ public class MecanumTeleOpMode extends OpMode {
     private WebcamName webcam = null;
     private OpenCvCamera camera = null;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-
     static final double FEET_PER_METER = 3.28084;
     double fx = 578.272;
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
     double tagsize = 0.166;
-
+    int liftPower = 0;
+    int targetPosition = 300;
+    boolean clawExtended = false;
+    boolean moveX = false, moveA = false, moveY = false;
+    int position[]={500,700,1800,3200,4800};
+    int vPos = 0;
     @Override
     public void init(){
         telemetry.addData("Status", "Initialized");
@@ -64,17 +66,17 @@ public class MecanumTeleOpMode extends OpMode {
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0);
-        liftMotor.setTargetPosition(400);
-
+        liftMotor.setTargetPosition(0);
         webcam = hardwareMap.get(WebcamName.class, "camera");
-        // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
+       // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
 
         rightFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.update();
@@ -88,8 +90,6 @@ public class MecanumTeleOpMode extends OpMode {
 
     @Override
     public void loop(){
-        int targetPosition = 300;
-        boolean clawExtended = false;
 
         leftStickForward = -this.gamepad1.left_stick_y;
         leftStickSide = this.gamepad1.left_stick_x * 1.1;
@@ -104,35 +104,34 @@ public class MecanumTeleOpMode extends OpMode {
         telemetry.addData("Left Stick Y", leftStickForward);
         telemetry.addData("Left Stick X", leftStickSide);
 
-        if(this.gamepad1.a){
-            liftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-
-            liftMotor.setPower(1);
-        }
-        if(this.gamepad1.b){
-            liftMotor.setPower(0);
-        }
-        if(this.gamepad1.y){
-            liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-            liftMotor.setPower(1);
-        }
+        // control lift
+        liftMotor.setTargetPosition(position[vPos]);
+        telemetry.addData("Lift target", liftMotor.getTargetPosition());
+        if(this.gamepad1.y && moveY==true && vPos<4){vPos++;moveY=false;}
+        if(!this.gamepad1.y)moveY=true;
+        if(this.gamepad1.a && moveA==true && vPos>0){vPos--;moveA=false;}
+        if(!this.gamepad1.a)moveA=true;
+        if(this.gamepad1.right_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition())liftMotor.setPower(1);
+        else liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         telemetry.addData("Lift encoder", liftMotor.getCurrentPosition());
         if (liftMotor.getCurrentPosition() == targetPosition)
             telemetry.addLine("EXTENDED");
 
         //prindere gheara
-        if (this.gamepad1.x){
+        if (this.gamepad1.x && moveX==true){
             if(!clawExtended){
                 telemetry.addLine("Claw EXTENDED");
-                claw.setPosition(.5);
+                claw.setPosition(1);
                 clawExtended = true;
             } else {
                 telemetry.addLine("Claw RETRACTED");
                 claw.setPosition(0);
                 clawExtended = false;
             }
+            moveX=false;
         }
+        if(!this.gamepad1.x)moveX=true;
         telemetry.addData("Servo Position", claw.getPosition());
 
         leftFrontMotor.setPower(frontLeftPower);
