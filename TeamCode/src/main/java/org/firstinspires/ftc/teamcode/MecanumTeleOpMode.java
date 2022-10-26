@@ -7,18 +7,14 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
-import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
+import com.qualcomm.robotcore.util.ReadWriteFile;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import java.io.File;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
+import org.openftc.easyopencv.OpenCvCamera;
+
 @TeleOp
 
 public class MecanumTeleOpMode extends OpMode {
@@ -30,6 +26,7 @@ public class MecanumTeleOpMode extends OpMode {
     private DcMotor liftMotor;
     private Servo claw;
 
+    File deltaPozFile = AppUtil.getInstance().getSettingsFile("deltaPozFile.txt");
     private ElapsedTime runtime = new ElapsedTime();
     private double leftStickForward = 0;
     private double leftStickSide = 0;
@@ -49,14 +46,17 @@ public class MecanumTeleOpMode extends OpMode {
     double cx = 402.145;
     double cy = 221.506;
     double tagsize = 0.166;
-    int liftPower = 0;
-    int targetPosition = 300;
     boolean clawExtended = false;
     boolean moveX = false, moveA = false, moveY = false;
     int position[]={500,700,1800,3200,4800};
     int vPos = 0;
+    int targetPosition;
+    String deltaPozStr = ReadWriteFile.readFile(deltaPozFile);
+    int deltaPoz =Integer.valueOf(deltaPozStr);
+    int deltaPozAux;
     @Override
     public void init(){
+
         telemetry.addData("Status", "Initialized");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
@@ -66,9 +66,11 @@ public class MecanumTeleOpMode extends OpMode {
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0);
-        liftMotor.setTargetPosition(0);
+        liftMotor.setTargetPosition(0 + deltaPoz);
         webcam = hardwareMap.get(WebcamName.class, "camera");
        // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
+
+        deltaPoz = deltaPoz + Integer.valueOf(deltaPozStr);
 
         rightFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -78,7 +80,6 @@ public class MecanumTeleOpMode extends OpMode {
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         telemetry.update();
     }
 
@@ -94,7 +95,6 @@ public class MecanumTeleOpMode extends OpMode {
         leftStickForward = -this.gamepad1.left_stick_y;
         leftStickSide = this.gamepad1.left_stick_x * 1.1;
         botSpin = this.gamepad1.right_stick_x;
-
         denominator = Math.max(Math.abs(leftStickForward) + Math.abs(leftStickSide) + Math.abs(botSpin), 1);
         frontLeftPower = (leftStickForward + leftStickSide + botSpin) / denominator;
         rearRightPower = (leftStickForward + leftStickSide - botSpin) / denominator;
@@ -105,16 +105,24 @@ public class MecanumTeleOpMode extends OpMode {
         telemetry.addData("Left Stick X", leftStickSide);
 
         // control lift
-        liftMotor.setTargetPosition(position[vPos]);
+
         telemetry.addData("Lift target", liftMotor.getTargetPosition());
+
         if(this.gamepad1.y && moveY==true && vPos<4){vPos++;moveY=false;}
         if(!this.gamepad1.y)moveY=true;
+
         if(this.gamepad1.a && moveA==true && vPos>0){vPos--;moveA=false;}
         if(!this.gamepad1.a)moveA=true;
-        if(this.gamepad1.right_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition())liftMotor.setPower(1);
+
+        if(this.gamepad1.right_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition()){liftMotor.setTargetPosition(position[vPos] - deltaPoz);liftMotor.setPower(1);}
+        else
+        if(this.gamepad1.left_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition()){liftMotor.setTargetPosition(position[0]-deltaPoz);liftMotor.setPower(1);vPos=0;}
         else liftMotor.setPower(0);
+
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         telemetry.addData("Lift encoder", liftMotor.getCurrentPosition());
+        telemetry.addData("deltaPoz", deltaPoz);
+        telemetry.addData("deltaPozAux", deltaPozAux);
         if (liftMotor.getCurrentPosition() == targetPosition)
             telemetry.addLine("EXTENDED");
 
@@ -140,6 +148,8 @@ public class MecanumTeleOpMode extends OpMode {
         rightFrontMotor.setPower(frontRightPower);
         leftRearMotor.setPower(rearLeftPower);
 
+        deltaPozAux = liftMotor.getCurrentPosition();
+        ReadWriteFile.writeFile(deltaPozFile,String.valueOf(deltaPozAux));
         telemetry.update();
     }
 
