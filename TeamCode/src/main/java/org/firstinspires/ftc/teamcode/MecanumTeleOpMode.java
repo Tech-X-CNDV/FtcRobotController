@@ -26,6 +26,9 @@ public class MecanumTeleOpMode extends OpMode {
     private DcMotor liftMotor;
     private Servo claw;
 
+    private Servo servo1;
+    private Servo servo2;
+
     File deltaPozFile = AppUtil.getInstance().getSettingsFile("deltaPozFile.txt");
     private ElapsedTime runtime = new ElapsedTime();
     private double leftStickForward = 0;
@@ -47,7 +50,7 @@ public class MecanumTeleOpMode extends OpMode {
     double cy = 221.506;
     double tagsize = 0.166;
     boolean clawExtended = false;
-    boolean moveX = false, moveA = false, moveY = false;
+    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, moveRbumper;
     int position[]={500,700,1800,3200,4800};
     int vPos = 0;
     int targetPosition;
@@ -66,6 +69,9 @@ public class MecanumTeleOpMode extends OpMode {
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0);
+        servo1 = hardwareMap.get(Servo.class, "servo1");
+        servo2 = hardwareMap.get(Servo.class, "servo2");
+        servo1.setPosition(0.1);servo2.setPosition(0.1);
         liftMotor.setTargetPosition(0 + deltaPoz);
         webcam = hardwareMap.get(WebcamName.class, "camera");
        // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
@@ -123,18 +129,30 @@ public class MecanumTeleOpMode extends OpMode {
         telemetry.addData("Lift encoder", liftMotor.getCurrentPosition());
         telemetry.addData("deltaPoz", deltaPoz);
         telemetry.addData("deltaPozAux", deltaPozAux);
-        if (liftMotor.getCurrentPosition() == targetPosition)
-            telemetry.addLine("EXTENDED");
-
+        //if (liftMotor.getCurrentPosition() == targetPosition)
+          //  telemetry.addLine("EXTENDED");
+        //sevo conuri
+        if(this.gamepad1.left_bumper && moveLbumper) {
+                servo1.setPosition(0.1);
+                servo2.setPosition(0.1);
+                moveLbumper = false;
+        }
+        else moveLbumper = true;
+        if(this.gamepad1.right_bumper && moveRbumper) {
+            servo1.setPosition(0.6);
+            servo2.setPosition(0.6);
+            moveRbumper = false;
+        }
+        else moveRbumper = true;
         //prindere gheara
         if (this.gamepad1.x && moveX==true){
             if(!clawExtended){
                 telemetry.addLine("Claw EXTENDED");
-                claw.setPosition(1);
+                claw.setPosition(0.2);
                 clawExtended = true;
             } else {
                 telemetry.addLine("Claw RETRACTED");
-                claw.setPosition(0);
+                claw.setPosition(0.5);
                 clawExtended = false;
             }
             moveX=false;
