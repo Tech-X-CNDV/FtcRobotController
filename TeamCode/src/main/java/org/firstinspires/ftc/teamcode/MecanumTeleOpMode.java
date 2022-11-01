@@ -39,16 +39,6 @@ public class MecanumTeleOpMode extends OpMode {
     private double frontRightPower = 0;
     private double rearLeftPower = 0;
     private double rearRightPower = 0;
-   // int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-    private WebcamName webcam = null;
-    private OpenCvCamera camera = null;
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    static final double FEET_PER_METER = 3.28084;
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
-    double tagsize = 0.166;
     boolean clawExtended = false;
     boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, moveRbumper;
     int position[]={500,700,1800,3200,4800};
@@ -73,8 +63,6 @@ public class MecanumTeleOpMode extends OpMode {
         servo2 = hardwareMap.get(Servo.class, "servo2");
         servo1.setPosition(0.1);servo2.setPosition(0.1);
         liftMotor.setTargetPosition(0 + deltaPoz);
-        webcam = hardwareMap.get(WebcamName.class, "camera");
-       // camera = OpenCvCameraFactory.getInstance().createWebcam(webcam, cameraMonitorViewId);
 
         deltaPoz = deltaPoz + Integer.valueOf(deltaPozStr);
 

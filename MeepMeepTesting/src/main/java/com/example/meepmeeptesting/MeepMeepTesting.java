@@ -24,8 +24,6 @@ public class MeepMeepTesting {
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
                                 .forward(5)//lasare con nou
                                 .back(5)
-                                .turn(Math.toRadians(90))
-                                .forward(12)
                                 //pt caz 1
                                 /*.back(47)
                                 .turn(Math.toRadians(-45))*/
@@ -34,7 +32,6 @@ public class MeepMeepTesting {
                                 .turn(Math.toRadians(-135))*/
                                 //pt caz 3
                                 .back(5)
-                                .turn(Math.toRadians((-125)))
 
                                 //.strafeRight(20)
                                 //.forward(28)
