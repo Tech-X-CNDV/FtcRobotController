@@ -83,6 +83,10 @@ public  class AprilTagDetectionPipeline extends OpenCvPipeline
         nativeApriltagPtr = AprilTagDetectorJNI.createApriltagDetector(AprilTagDetectorJNI.TagFamily.TAG_36h11.string, 3, 3);
     }
 
+    public AprilTagDetectionPipeline() {
+
+    }
+
     @Override
     public void finalize()
     {

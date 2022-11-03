@@ -70,7 +70,6 @@ public class MecanumTeleOpMode extends OpMode {
         rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

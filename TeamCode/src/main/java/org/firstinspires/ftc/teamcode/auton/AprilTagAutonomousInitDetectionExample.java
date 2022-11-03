@@ -61,7 +61,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     public void runOpMode()
     {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "camera"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
         camera.setPipeline(aprilTagDetectionPipeline);
@@ -80,7 +80,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             }
         });
 
-        telemetry.setMsTransmissionInterval(50);
+        telemetry.setMsTransmissionInterval(100);
 
         /*
          * The INIT-loop:
@@ -96,7 +96,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 
                 for(AprilTagDetection tag : currentDetections)
                 {
-                    if(tag.id == ID_TAG_OF_INTEREST)
+                    if(tag.id == 0 || tag.id == 19 || tag.id == 9)
                     {
                         tagOfInterest = tag;
                         tagFound = true;
