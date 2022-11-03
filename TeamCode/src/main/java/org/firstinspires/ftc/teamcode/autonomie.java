@@ -40,12 +40,15 @@ public class autonomie extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-       Trajectory trajFirstCap = drive.trajectoryBuilder(new Pose2d(35, -60, Math.toRadians(90)))
+        Pose2d startPose = new Pose2d(35, -60, Math.toRadians(90));
+        drive.setPoseEstimate(startPose);
+
+       Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
                 .forward(10) //dupa vine scanare Signal
-                .splineTo(new Vector2d(28,-7), Math.toRadians(135)) // lasat con
+                .splineTo(new Vector2d(27,-8), Math.toRadians(135)) // lasat con
                 .build();
        Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-               .back(9).build();
+               .back(7).build();
         Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135))))
                 .forward(27) //prindere con nou
                 .build();
@@ -57,7 +60,7 @@ public class autonomie extends LinearOpMode {
         Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
                 .back(5).build();
 
-        Trajectory trajp0 = drive.trajectoryBuilder(trajSecondCap.end()).build();
+        Trajectory trajp0 = drive.trajectoryBuilder(trajSecondCap.end()).forward(1).build();
         Trajectory trajp1 = drive.trajectoryBuilder(trajSecondCap.end())
                 .strafeLeft(10)
                 .build();
@@ -89,7 +92,7 @@ public class autonomie extends LinearOpMode {
         });
         waitForStart();
 
-        ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
+       // ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
 
         drive.followTrajectory(trajFirstCap);
         drive.followTrajectory(trajFirstCapReposition);
