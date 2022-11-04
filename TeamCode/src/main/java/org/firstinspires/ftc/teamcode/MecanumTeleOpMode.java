@@ -40,7 +40,7 @@ public class MecanumTeleOpMode extends OpMode {
     private double rearLeftPower = 0;
     private double rearRightPower = 0;
     boolean clawExtended = false;
-    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, moveRbumper;
+    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper=false, liftUp = true;
     int position[]={500,700,1800,3200,4800};
     int vPos = 0;
     int targetPosition;
@@ -114,11 +114,17 @@ public class MecanumTeleOpMode extends OpMode {
         if(this.gamepad1.left_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition()){vPos=0;liftMotor.setPower(1);}
         else liftMotor.setPower(0); */
 
-        if(this.gamepad1.y && moveY==true){liftMotor.setTargetPosition(-10000);moveY=false;}
+        if(this.gamepad1.y && moveY==true){
+            if(liftUp = true)
+                liftMotor.setTargetPosition(-10000);
+            else
+                liftMotor.setTargetPosition(10000);
+            moveY=false;
+        }
         if(!this.gamepad1.y)moveY=true;
 
-        if(this.gamepad1.a && moveA==true){liftMotor.setTargetPosition(10000);moveA=false;}
-        if(!this.gamepad1.a)moveA=true;
+       /* if(this.gamepad1.a && moveA==true){liftMotor.setTargetPosition(10000);moveA=false;}
+        if(!this.gamepad1.a)moveA=true;*/
 
       //  liftMotor.setTargetPosition(position[vPos] - deltaPoz);
         if(this.gamepad1.right_trigger > 0){liftMotor.setPower(1);}
@@ -132,15 +138,28 @@ public class MecanumTeleOpMode extends OpMode {
         //if (liftMotor.getCurrentPosition() == targetPosition)
           //  telemetry.addLine("EXTENDED");
         //sevo conuri
-        if(this.gamepad1.left_bumper && moveLbumper) {
+        /*if(this.gamepad1.left_bumper && moveLbumper) {
+            if(bumperExtended = true) {
                 servoLeft.setPosition(0.75);
                 servoRight.setPosition(0.25);
+            } else {
+                servoLeft.setPosition(0.1);
+                servoRight.setPosition(0.9);
+            }
                 moveLbumper = false;
         }
-        else moveLbumper = true;
+        else moveLbumper = true;*/
+
         if(this.gamepad1.right_bumper && moveRbumper) {
-            servoLeft.setPosition(0.1);
-            servoRight.setPosition(0.9);
+            if(bumperExtended = true) {
+                servoLeft.setPosition(0.75);
+                servoRight.setPosition(0.25);
+                bumperExtended = false;
+            } else {
+                servoLeft.setPosition(0.1);
+                servoRight.setPosition(0.9);
+                bumperExtended = true;
+            }
             moveRbumper = false;
         }
         else moveRbumper = true;
