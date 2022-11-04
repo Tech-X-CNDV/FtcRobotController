@@ -23,6 +23,8 @@ import java.util.ArrayList;
 @TeleOp
 
 public class autonomie extends LinearOpMode {
+    OpenCvCamera camera;
+    WebcamName webcamName;
     AprilTagDetectionPipeline parkTag;
     static final double FEET_PER_METER = 3.28084;
     double fx = 578.272;
@@ -45,12 +47,12 @@ public class autonomie extends LinearOpMode {
 
        Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
                 .forward(10) //dupa vine scanare Signal
-                .splineTo(new Vector2d(27,-8), Math.toRadians(135)) // lasat con
+                .splineTo(new Vector2d(27,-4.5), Math.toRadians(135)) // lasat con
                 .build();
        Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-               .back(7).build();
+               .back(10).build();
         Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135))))
-                .forward(27) //prindere con nou
+                .forward(26) //prindere con nou
                 .build();
         Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
                 .back(14).build();
@@ -73,8 +75,9 @@ public class autonomie extends LinearOpMode {
         int park = 0;
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        WebcamName webcamName = hardwareMap.get(WebcamName.class, "camera");
-        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+         webcamName = hardwareMap.get(WebcamName.class, "camera");
+         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+         parkTag = new AprilTagDetectionPipeline(tagsize, fx,fy,cx,cy);
 
         camera.setPipeline(parkTag);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
@@ -90,9 +93,33 @@ public class autonomie extends LinearOpMode {
 
             }
         });
-       // ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
+       ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
 
+       boolean tagFound = false;
+       while(!tagFound && !opModeIsActive()) {
+       if(currentDetections.size() !=0)
+           for(AprilTagDetection tag : currentDetections)
+           {
+               if(tag.id ==1)park=1;
+                   else
+               if(tag.id == 10)park=2;
+                   else
+               if(tag.id == 19)park=3;
+                   else park=0;
+           }
+           telemetry.addData("park detection", park);
+       }
         waitForStart();
+        while (opModeIsActive()){
+            //if(perkTag != null)
+            //currentDetections = parkTag.getLatestDetections();
+            // telemetry.addData("Realtime analysis", parkTag.toString());
+            //telemetry.addData("Detection sizes", currentDetections.size());
+            // telemetry.update();
+
+            // Don't burn CPU cycles busy-looping in this sample
+            sleep(50);
+        }
 
         /*
         drive.followTrajectory(trajFirstCap);
@@ -118,15 +145,6 @@ public class autonomie extends LinearOpMode {
                 drive.followTrajectory(trajp3);
                 break;
         }*/
-        while (opModeIsActive()){
-            //if(perkTag != null)
-            //currentDetections = parkTag.getLatestDetections();
-           // telemetry.addData("Realtime analysis", parkTag.toString());
-            //telemetry.addData("Detection sizes", currentDetections.size());
-           // telemetry.update();
 
-            // Don't burn CPU cycles busy-looping in this sample
-            sleep(50);
-        }
     }
 }
