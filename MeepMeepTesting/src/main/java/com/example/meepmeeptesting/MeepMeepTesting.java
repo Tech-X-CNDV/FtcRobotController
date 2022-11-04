@@ -16,10 +16,10 @@ public class MeepMeepTesting {
                 .followTrajectorySequence(drive ->
                         drive.trajectorySequenceBuilder(new Pose2d(35, -60, Math.toRadians(90)))
                                 .forward(10) //dupa vine scanare Signal
-                                .splineTo(new Vector2d(28,-7), Math.toRadians(135)) // lasat con
-                                .back(8)
+                                .splineTo(new Vector2d(27,-4.5), Math.toRadians(135)) // lasat con
+                                .back(10)
                                 .turn(Math.toRadians(-135))
-                                .forward(25) //prindere con nou
+                                .forward(26) //prindere con nou
                                 .back(12)
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
                                 .forward(5)//lasare con nou
@@ -31,7 +31,6 @@ public class MeepMeepTesting {
                                 /*.back(25)
                                 .turn(Math.toRadians(-135))*/
                                 //pt caz 3
-                                .back(5)
 
                                 //.strafeRight(20)
                                 //.forward(28)
