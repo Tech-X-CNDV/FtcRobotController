@@ -100,11 +100,11 @@ public class autonomie extends LinearOpMode {
        if(currentDetections.size() !=0)
            for(AprilTagDetection tag : currentDetections)
            {
-               if(tag.id ==1)park=1;
+               if(tag.id ==1){tagFound=true;park=1;}
                    else
-               if(tag.id == 10)park=2;
+               if(tag.id == 10){tagFound=true;park=2;}
                    else
-               if(tag.id == 19)park=3;
+               if(tag.id == 19){tagFound=true;park=3;}
                    else park=0;
            }
            telemetry.addData("park detection", park);
@@ -116,7 +116,7 @@ public class autonomie extends LinearOpMode {
             // telemetry.addData("Realtime analysis", parkTag.toString());
             //telemetry.addData("Detection sizes", currentDetections.size());
             // telemetry.update();
-
+            telemetry.addData("park detection", park);
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
         }
