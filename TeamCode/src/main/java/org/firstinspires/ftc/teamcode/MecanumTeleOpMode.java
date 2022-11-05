@@ -40,7 +40,7 @@ public class MecanumTeleOpMode extends OpMode {
     private double rearLeftPower = 0;
     private double rearRightPower = 0;
     boolean clawExtended = false;
-    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper=false, liftUp = true;
+    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper=false,liftUp = false, bumperRight = false;
     int position[]={500,700,1800,3200,4800};
     int vPos = 0;
     int targetPosition;
@@ -115,14 +115,32 @@ public class MecanumTeleOpMode extends OpMode {
         else liftMotor.setPower(0); */
 
         if(this.gamepad1.y && moveY==true){
-            if(liftUp = true)
+            if(liftUp) {
                 liftMotor.setTargetPosition(-10000);
-            else
+                liftUp=false;
+            }
+            else {
                 liftMotor.setTargetPosition(10000);
+                liftUp=true;
+            }
             moveY=false;
         }
         if(!this.gamepad1.y)moveY=true;
 
+        if(this.gamepad1.right_bumper && moveRbumper==true){
+            if(bumperExtended) {
+                servoLeft.setPosition(0.75);
+                servoRight.setPosition(0.25);
+                bumperExtended = false;
+            }
+            else {
+                servoLeft.setPosition(0.1);
+                servoRight.setPosition(0.9);
+                bumperExtended = true;
+            }
+            moveRbumper=false;
+        }
+        if(!this.gamepad1.right_bumper)moveRbumper=true;
        /* if(this.gamepad1.a && moveA==true){liftMotor.setTargetPosition(10000);moveA=false;}
         if(!this.gamepad1.a)moveA=true;*/
 
@@ -149,20 +167,6 @@ public class MecanumTeleOpMode extends OpMode {
                 moveLbumper = false;
         }
         else moveLbumper = true;*/
-
-        if(this.gamepad1.right_bumper && moveRbumper) {
-            if(bumperExtended = true) {
-                servoLeft.setPosition(0.75);
-                servoRight.setPosition(0.25);
-                bumperExtended = false;
-            } else {
-                servoLeft.setPosition(0.1);
-                servoRight.setPosition(0.9);
-                bumperExtended = true;
-            }
-            moveRbumper = false;
-        }
-        else moveRbumper = true;
         //prindere gheara
         if (this.gamepad1.x && moveX==true){
             if(!clawExtended){
