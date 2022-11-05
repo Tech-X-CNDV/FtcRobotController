@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.qualcomm.robotcore.util.ReadWriteFile;
+
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
 import java.io.File;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -40,15 +42,48 @@ public class MecanumTeleOpMode extends OpMode {
     private double rearLeftPower = 0;
     private double rearRightPower = 0;
     boolean clawExtended = false;
-    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper=false,liftUp = false, bumperRight = false;
-    int position[]={500,700,1800,3200,4800};
-    int vPos = 0;
-    int targetPosition;
-   // String deltaPozStr = ReadWriteFile.readFile(deltaPozFile);
-    int deltaPoz =Integer.valueOf(0);
-    int deltaPozAux;
+    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper = false, liftUp = false, bumperRight = false, failSafeLift = false, pressDpDown = false, schizoCheck = false;
+    int position[] = {-1000, 0, 500, 1000, 3200, 4800, 5600};
+    int vPos = 1;
+
+    // String deltaPozStr = ReadWriteFile.readFile(deltaPozFile);
+    public void autoSelectLift() {
+        if (this.gamepad1.back) {
+            liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            vPos = 1;
+        }
+        if (this.gamepad1.y && moveY == true && vPos < 6) {
+            vPos++;
+            moveY = false;
+            schizoCheck = false;
+        }
+        if (!this.gamepad1.y) moveY = true;
+
+        if (this.gamepad1.a && moveA == true && vPos > 0) {
+            vPos--;
+            moveA = false;
+            schizoCheck = false;
+        }
+        if (!this.gamepad1.a) moveA = true;
+    }
+
+    public void autoMoveLift() {
+        if (this.gamepad1.dpad_down && pressDpDown) {
+            failSafeLift = !failSafeLift;
+            pressDpDown = false;
+        }
+        if (!this.gamepad1.dpad_down) pressDpDown = true;
+
+        liftMotor.setTargetPosition(position[vPos]);
+        if (liftMotor.getTargetPosition() != liftMotor.getCurrentPosition() && !failSafeLift && !schizoCheck)
+            liftMotor.setPower(1);
+        else liftMotor.setPower(0);
+        if(liftMotor.getTargetPosition() == liftMotor.getCurrentPosition())schizoCheck = true;
+    }
+
     @Override
-    public void init(){
+    public void init() {
 
         telemetry.addData("Status", "Initialized");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
@@ -61,29 +96,30 @@ public class MecanumTeleOpMode extends OpMode {
         claw.setPosition(0.6);
         servoLeft = hardwareMap.get(Servo.class, "servoLeft");
         servoRight = hardwareMap.get(Servo.class, "servoRight");
-        servoLeft.setPosition(0.3);servoRight.setPosition(0.7);
-        liftMotor.setTargetPosition(0 + deltaPoz);
-
-        deltaPoz = deltaPoz + Integer.valueOf(0);
-
+        servoLeft.setPosition(0.3);
+        servoRight.setPosition(0.7);
+        vPos = 1;
         rightFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         telemetry.update();
     }
 
     @Override
-    public void init_loop(){}
+    public void init_loop() {
+    }
 
     @Override
-    public void start(){runtime.reset();}
+    public void start() {
+        runtime.reset();
+    }
 
     @Override
-    public void loop(){
+    public void loop() {
 
         leftStickForward = -this.gamepad1.left_stick_y;
         leftStickSide = this.gamepad1.left_stick_x * 1.1;
@@ -98,7 +134,8 @@ public class MecanumTeleOpMode extends OpMode {
         telemetry.addData("Left Stick X", leftStickSide);
 
         // control lift
-
+        autoSelectLift();
+        autoMoveLift();
         telemetry.addData("Lift target", liftMotor.getTargetPosition());
 
         /*
@@ -112,7 +149,7 @@ public class MecanumTeleOpMode extends OpMode {
         if(this.gamepad1.right_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition()){liftMotor.setPower(1);}
         else
         if(this.gamepad1.left_trigger > 0 && liftMotor.getCurrentPosition()!=liftMotor.getTargetPosition()){vPos=0;liftMotor.setPower(1);}
-        else liftMotor.setPower(0); */
+        else liftMotor.setPower(0);
 
         if(this.gamepad1.y && moveY==true){
             if(liftUp) {
@@ -126,50 +163,36 @@ public class MecanumTeleOpMode extends OpMode {
             moveY=false;
         }
         if(!this.gamepad1.y)moveY=true;
+        */
 
-        if(this.gamepad1.right_bumper && moveRbumper==true){
-            if(bumperExtended) {
+
+        if (this.gamepad1.right_bumper && moveRbumper == true) {
+            if (bumperExtended) {
                 servoLeft.setPosition(0.75);
                 servoRight.setPosition(0.25);
                 bumperExtended = false;
-            }
-            else {
+            } else {
                 servoLeft.setPosition(0.1);
                 servoRight.setPosition(0.9);
                 bumperExtended = true;
             }
-            moveRbumper=false;
+            moveRbumper = false;
         }
-        if(!this.gamepad1.right_bumper)moveRbumper=true;
+        if (!this.gamepad1.right_bumper) moveRbumper = true;
        /* if(this.gamepad1.a && moveA==true){liftMotor.setTargetPosition(10000);moveA=false;}
         if(!this.gamepad1.a)moveA=true;*/
 
-      //  liftMotor.setTargetPosition(position[vPos] - deltaPoz);
-        if(this.gamepad1.right_trigger > 0){liftMotor.setPower(1);}
-        else liftMotor.setPower(0);
+        //  liftMotor.setTargetPosition(position[vPos] - deltaPoz);
+        if (this.gamepad1.right_trigger > 0) {
+            liftMotor.setPower(1);
+        } else liftMotor.setPower(0);
 
 
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         telemetry.addData("Lift encoder", liftMotor.getCurrentPosition());
-        telemetry.addData("deltaPoz", deltaPoz);
-        telemetry.addData("deltaPozAux", deltaPozAux);
-        //if (liftMotor.getCurrentPosition() == targetPosition)
-          //  telemetry.addLine("EXTENDED");
-        //sevo conuri
-        /*if(this.gamepad1.left_bumper && moveLbumper) {
-            if(bumperExtended = true) {
-                servoLeft.setPosition(0.75);
-                servoRight.setPosition(0.25);
-            } else {
-                servoLeft.setPosition(0.1);
-                servoRight.setPosition(0.9);
-            }
-                moveLbumper = false;
-        }
-        else moveLbumper = true;*/
         //prindere gheara
-        if (this.gamepad1.x && moveX==true){
-            if(!clawExtended){
+        if (this.gamepad1.x && moveX == true) {
+            if (!clawExtended) {
                 telemetry.addLine("Claw EXTENDED");
                 claw.setPosition(0);
                 clawExtended = true;
@@ -178,12 +201,12 @@ public class MecanumTeleOpMode extends OpMode {
                 claw.setPosition(0.6);
                 clawExtended = false;
             }
-            moveX=false;
+            moveX = false;
         }
         telemetry.addData("servoLeft", servoLeft.getPosition());
         telemetry.addData("servoRight", servoRight.getPosition());
 
-        if(!this.gamepad1.x)moveX=true;
+        if (!this.gamepad1.x) moveX = true;
         telemetry.addData("Servo Position", claw.getPosition());
 
         leftFrontMotor.setPower(frontLeftPower);
@@ -192,12 +215,11 @@ public class MecanumTeleOpMode extends OpMode {
         rightFrontMotor.setPower(frontRightPower);
         leftRearMotor.setPower(rearLeftPower);
 
-        deltaPozAux = liftMotor.getCurrentPosition();
-        ReadWriteFile.writeFile(deltaPozFile,String.valueOf(deltaPozAux));
         telemetry.update();
     }
 
     @Override
-    public void stop(){}
+    public void stop() {
+    }
 }
 
