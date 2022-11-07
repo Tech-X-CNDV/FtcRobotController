@@ -36,7 +36,7 @@ public class autonomie extends LinearOpMode {
     int ID_TAG_OF_INTEREST_0 = 0;
     int ID_TAG_OF_INTEREST_1 = 9;
     int ID_TAG_OF_INTEREST_2 = 19;
-    AprilTagDetection tagOfInterest = null;
+    AprilTagDetection tagOfInterest;
 
     int park = 0;
 
@@ -125,7 +125,7 @@ public class autonomie extends LinearOpMode {
                         tagToTelemetry(tagOfInterest);
                     } else {
                         telemetry.addLine("Don't see tag of interest");
-                        if (tagOfInterest == null) {
+                        if (tagOfInterest==null) {
                             telemetry.addLine("(The tag has never been seen)");
                         } else {
                             telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
@@ -147,7 +147,7 @@ public class autonomie extends LinearOpMode {
             } else {
                 telemetry.addLine("Don't see tag of interest :(");
 
-                if (tagOfInterest == null) {
+                if (tagOfInterest==null) {
                     telemetry.addLine("(The tag has never been seen)");
                 } else {
                     telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
