@@ -41,6 +41,7 @@ class CRobot{
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0.6);
+        liftPos=8;
         servoLeft = hardwareMap.get(Servo.class, "servoLeft");
         servoRight = hardwareMap.get(Servo.class, "servoRight");
         servoLeft.setPosition(0.3);
@@ -56,10 +57,10 @@ class CRobot{
     }
     boolean clawExtended = false;
     boolean liftPower = true;
-    int position[] = {-1000, 0, 500, 1000, 2400, 3200, 4000, 4800, 5600, 6400, 7200};
-    public int liftPos = 1, bumperPos = 0;
+    int position[] = {-7420,-5700,-4600,-3300,-2500,-1100,-600, 0, 600, 1100, 2500, 3300, 4600, 5700, 7420};
+    public int liftPos = 8, bumperPos = 0;
     public void targetLiftUp() {
-        if(liftPos<10){
+        if(liftPos<14){
             liftPos++;
         }
     }
