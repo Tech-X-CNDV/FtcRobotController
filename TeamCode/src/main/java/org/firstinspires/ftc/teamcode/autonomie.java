@@ -40,6 +40,8 @@ public class autonomie extends LinearOpMode {
 
     int park = 0;
 
+    CRobot robot = new CRobot();
+
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -49,11 +51,14 @@ public class autonomie extends LinearOpMode {
 
         Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
                 .forward(10) //dupa vine scanare Signal
-                .splineTo(new Vector2d(27, -4.5), Math.toRadians(135)) // lasat con
+                .addDisplacementMarker(() -> {robot.bumperMove(0);robot.runLift(14);})
+                .splineTo(new Vector2d(27, -4.5), Math.toRadians(135))
+                .addDisplacementMarker(()->{robot.clawSwitch();})// lasat con
                 .build();
         Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(10).build();
-        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135))))
+                .back(9)
+                .addDisplacementMarker(() -> {robot.runLift(7);}).build();
+        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
                 .forward(26) //prindere con nou
                 .build();
         Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
@@ -64,14 +69,14 @@ public class autonomie extends LinearOpMode {
         Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
                 .back(5).build();
 
-        Trajectory trajp0 = drive.trajectoryBuilder(trajSecondCap.end()).forward(1).build();
-        Trajectory trajp1 = drive.trajectoryBuilder(trajSecondCap.end())
-                .strafeLeft(10)
+        Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45)))).forward(1).build();
+        Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
+                .strafeLeft(20)
                 .build();
-        Trajectory trajp2 = drive.trajectoryBuilder(trajSecondCap.end())
-                .strafeRight(10)
+        Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
+                .strafeRight(1)
                 .build();
-        Trajectory trajp3 = drive.trajectoryBuilder(trajSecondCap.end())
+        Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
                 .strafeRight(20)
                 .build();
 
@@ -108,6 +113,11 @@ public class autonomie extends LinearOpMode {
        }*/
 
         telemetry.setMsTransmissionInterval(100);
+
+        robot.init(telemetry,hardwareMap);
+
+        robot.bumperMove(1);
+        robot.clawSwitch();
 
         while (!isStarted() && !isStopRequested()) {
             ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
@@ -153,29 +163,22 @@ public class autonomie extends LinearOpMode {
                     telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
                     tagToTelemetry(tagOfInterest);
                 }
-                telemetry.update();
                 sleep(10);
             }
-        }
-        while (opModeIsActive()) {
-            //if(perkTag != null)
-            //currentDetections = parkTag.getLatestDetections();
-            // telemetry.addData("Realtime analysis", parkTag.toString());
-            //telemetry.addData("Detection sizes", currentDetections.size());
-            // telemetry.update();
-            // Don't burn CPU cycles busy-looping in this sample
-            sleep(50);
+            telemetry.update();
+
         }
 
-        /*
+
+
         drive.followTrajectory(trajFirstCap);
         drive.followTrajectory(trajFirstCapReposition);
-        drive.turn(Math.toRadians(-135));
-        drive.followTrajectory(trajConeStack);
+        drive.turn(Math.toRadians(-45));
+        /*drive.followTrajectory(trajConeStack);
         drive.followTrajectory(trajConeStackReposition);
         drive.turn(Math.toRadians(-90));
         drive.followTrajectory(trajSecondCap);
-        drive.followTrajectory(trajSecondCapReposition);
+        drive.followTrajectory(trajSecondCapReposition);*/
 
         switch (park){
             case 0:
@@ -190,7 +193,7 @@ public class autonomie extends LinearOpMode {
             case 3:
                 drive.followTrajectory(trajp3);
                 break;
-        }*/
+        }
 
     }
 

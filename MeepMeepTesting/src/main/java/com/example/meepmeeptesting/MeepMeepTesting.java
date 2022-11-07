@@ -18,12 +18,12 @@ public class MeepMeepTesting {
                                 .forward(10) //dupa vine scanare Signal
                                 .splineTo(new Vector2d(27,-4.5), Math.toRadians(135)) // lasat con
                                 .back(10)
-                                .turn(Math.toRadians(-135))
-                                .forward(26) //prindere con nou
+                                .turn(Math.toRadians(-45))
+                                /*.forward(26) //prindere con nou
                                 .back(12)
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
                                 .forward(5)//lasare con nou
-                                .back(5)
+                                .back(5)*/
                                 //pt caz 1
                                 /*.back(47)
                                 .turn(Math.toRadians(-45))*/
