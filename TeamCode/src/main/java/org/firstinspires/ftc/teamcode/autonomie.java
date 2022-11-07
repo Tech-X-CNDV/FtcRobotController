@@ -36,7 +36,9 @@ public class autonomie extends LinearOpMode {
     int ID_TAG_OF_INTEREST_0 = 0;
     int ID_TAG_OF_INTEREST_1 = 9;
     int ID_TAG_OF_INTEREST_2 = 19;
-    AprilTagDetection tagOfInterest = null;
+    AprilTagDetection tagOfInterest;
+
+    int park = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -72,7 +74,6 @@ public class autonomie extends LinearOpMode {
         Trajectory trajp3 = drive.trajectoryBuilder(trajSecondCap.end())
                 .strafeRight(20)
                 .build();
-        int park = 0;
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcamName = hardwareMap.get(WebcamName.class, "camera");
@@ -105,6 +106,9 @@ public class autonomie extends LinearOpMode {
            }
            telemetry.addData("park detection", park);
        }*/
+
+        telemetry.setMsTransmissionInterval(100);
+
         while (!isStarted() && !isStopRequested()) {
             ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
             if (currentDetections.size() != 0) {
@@ -115,24 +119,35 @@ public class autonomie extends LinearOpMode {
                         tagFound = true;
                         break;
                     }
-
+                }
                     if (tagFound) {
                         telemetry.addLine("Tag of interest sighted\n\nLocationData:");
-                        tagToTelemetry(tag);
+                        tagToTelemetry(tagOfInterest);
                     } else {
                         telemetry.addLine("Don't see tag of interest");
-                        if (tagOfInterest == null) {
+                        if (tagOfInterest==null) {
                             telemetry.addLine("(The tag has never been seen)");
                         } else {
                             telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
                             tagToTelemetry(tagOfInterest);
                         }
                     }
-                }
+
+                    switch (tagOfInterest.id){
+                        case 0:
+                            park = 1;
+                            break;
+                        case 9:
+                            park = 2;
+                            break;
+                        case 19:
+                            park = 3;
+                            break;
+                    }
             } else {
                 telemetry.addLine("Don't see tag of interest :(");
 
-                if (tagOfInterest == null) {
+                if (tagOfInterest==null) {
                     telemetry.addLine("(The tag has never been seen)");
                 } else {
                     telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
@@ -148,7 +163,6 @@ public class autonomie extends LinearOpMode {
             // telemetry.addData("Realtime analysis", parkTag.toString());
             //telemetry.addData("Detection sizes", currentDetections.size());
             // telemetry.update();
-            telemetry.addData("park detection", park);
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
         }
@@ -182,11 +196,13 @@ public class autonomie extends LinearOpMode {
 
     void tagToTelemetry(AprilTagDetection detection) {
         telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
+        telemetry.addLine(String.format("\nParking Spot = %d", park));
         telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
         telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
         telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
         telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
         telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
         telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
+
     }
 }
