@@ -52,12 +52,12 @@ public class autonomie extends LinearOpMode {
         Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
                 .forward(10) //dupa vine scanare Signal
                 .addDisplacementMarker(() -> {robot.bumperMove(0);robot.runLift(14);})
-                .splineTo(new Vector2d(27, -4.5), Math.toRadians(135))
+                .splineTo(new Vector2d(27, -2), Math.toRadians(135))
                 .addDisplacementMarker(()->{robot.clawSwitch();})// lasat con
                 .build();
         Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
                 .back(9)
-                .addDisplacementMarker(() -> {robot.runLift(7);}).build();
+                .addDisplacementMarker(() -> {robot.runLift(7);robot.bumperMove(1);}).build();
         Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
                 .forward(26) //prindere con nou
                 .build();
@@ -71,13 +71,13 @@ public class autonomie extends LinearOpMode {
 
         Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45)))).forward(1).build();
         Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeLeft(20)
+                .strafeLeft(25)
                 .build();
         Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
                 .strafeRight(1)
                 .build();
         Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeRight(20)
+                .strafeRight(25)
                 .build();
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
