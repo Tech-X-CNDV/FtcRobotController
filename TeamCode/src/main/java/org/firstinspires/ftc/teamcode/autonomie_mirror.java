@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 @TeleOp
 
-public class autonomie extends LinearOpMode {
+public class autonomie_mirror extends LinearOpMode {
     OpenCvCamera camera;
     WebcamName webcamName;
     AprilTagDetectionPipeline parkTag;
@@ -46,17 +46,16 @@ public class autonomie extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        Pose2d startPose = new Pose2d(35, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(-35, -60, Math.toRadians(90));
         drive.setPoseEstimate(startPose);
 
         Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
-
                 .forward(45) //dupa vine scanare Signal
                 .addDisplacementMarker(() -> {
                     robot.bumperMove(0);
                     robot.runLift(14);
                 })
-                .splineTo(new Vector2d(27, -2), Math.toRadians(135))// lasat con
+                .splineTo(new Vector2d(-29, 0), Math.toRadians(45))// lasat con
                 //.forward(10)
                 .addDisplacementMarker(() -> {
                     while(robot.liftMotor.isBusy()){}
@@ -64,7 +63,7 @@ public class autonomie extends LinearOpMode {
                 })
                 .build();
         Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(10)
+                .back(15)
                 .addDisplacementMarker(() -> {
                     robot.runLift(7);
                     robot.bumperMove(1);
@@ -81,15 +80,15 @@ public class autonomie extends LinearOpMode {
         Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
                 .back(5).build();
 
-        Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45)))).forward(1).build();
-        Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeLeft(23)
+        Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(45)))).forward(1).build();
+        Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(45))))
+                .strafeLeft(24)
                 .build();
-        Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
+        Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(45))))
                 .back(1)
                 .build();
-        Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeRight(23)
+        Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(45))))
+                .strafeRight(24)
                 .build();
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcamName = hardwareMap.get(WebcamName.class, "camera");
@@ -182,8 +181,8 @@ public class autonomie extends LinearOpMode {
 
 
         drive.followTrajectory(trajFirstCap);
-       drive.followTrajectory(trajFirstCapReposition);
-        drive.turn(Math.toRadians(-45));
+        drive.followTrajectory(trajFirstCapReposition);
+        drive.turn(Math.toRadians(45));
         /*drive.followTrajectory(trajConeStack);
         drive.followTrajectory(trajConeStackReposition);
         drive.turn(Math.toRadians(-90));

@@ -59,8 +59,8 @@ class CRobot {
 
     boolean clawExtended = false;
     boolean liftPower = true;
-    boolean overrideLift = false;
-    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 1100, 2500, 3300, 4600, 5700, 7420};
+    boolean overrideLift = true;
+    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 1100, 2500, 3300, 4600, 5700, 7430};
     public int liftPos = 8, bumperPos = 0;
 
     public void targetLiftUp() {

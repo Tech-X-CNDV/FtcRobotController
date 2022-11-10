@@ -14,11 +14,23 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(35, -60, Math.toRadians(90)))
-                                .forward(10) //dupa vine scanare Signal
-                                .splineTo(new Vector2d(27,-4.5), Math.toRadians(135)) // lasat con
+                        drive.trajectorySequenceBuilder(new Pose2d(-35, -60, Math.toRadians(90)))
+                                .forward(35)
+                                .splineTo(new Vector2d(-27, -2), Math.toRadians(45))
+
+                             //   .back(12)
+                               // .turn(Math.toRadians(45))
+
+                                //p2
+                                //.strafeRight(23)
+                                //p3
+                               // .strafeRight(46)
+                                /*
+                                .forward(20) //dupa vine scanare Signal
+                                .splineTo(new Vector2d(25,-2), Math.toRadians(135)) // lasat con
                                 .back(10)
-                                .turn(Math.toRadians(-45))
+                                */
+                               // .turn(Math.toRadians(-45))
                                 /*.forward(26) //prindere con nou
                                 .back(12)
                                 .turn(Math.toRadians(-90)) //de aici merge pentru cap #2
