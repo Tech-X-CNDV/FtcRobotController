@@ -165,8 +165,7 @@ public class autonomiev2 extends LinearOpMode {
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
         }
-
-        /*
+        //
         drive.followTrajectory(trajFirstCap);
         drive.followTrajectory(trajFirstCapReposition);
         drive.turn(Math.toRadians(-135));
@@ -188,7 +187,7 @@ public class autonomiev2 extends LinearOpMode {
             case 3:
                 drive.followTrajectory(trajp3);
                 break;
-        }*/
+        }
 
     }
 
