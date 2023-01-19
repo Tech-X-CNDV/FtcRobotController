@@ -36,6 +36,7 @@ public class autonomiev2 extends LinearOpMode {
     int ID_TAG_OF_INTEREST_1 = 9;
     int ID_TAG_OF_INTEREST_2 = 19;
     AprilTagDetection tagOfInterest;
+    ArrayList<AprilTagDetection> currentDetections;
 
     int park = 0;
 
@@ -109,7 +110,7 @@ public class autonomiev2 extends LinearOpMode {
         telemetry.setMsTransmissionInterval(100);
 
         while (!isStarted() && !isStopRequested()) {
-            ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
+            currentDetections = parkTag.getLatestDetections();
             if (currentDetections.size() != 0) {
                 boolean tagFound = false;
                 for (AprilTagDetection tag : currentDetections) {
@@ -156,39 +157,40 @@ public class autonomiev2 extends LinearOpMode {
                 sleep(10);
             }
         }
+
         while (opModeIsActive()) {
-            //if(perkTag != null)
-            //currentDetections = parkTag.getLatestDetections();
-            // telemetry.addData("Realtime analysis", parkTag.toString());
-            //telemetry.addData("Detection sizes", currentDetections.size());
-            // telemetry.update();
+            if (parkTag != null)
+                currentDetections = parkTag.getLatestDetections();
+            telemetry.addData("Realtime analysis", parkTag.toString());
+            telemetry.addData("Detection sizes", currentDetections.size());
+            telemetry.update();
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
-        }
-        //
-        drive.followTrajectory(trajFirstCap);
-        drive.followTrajectory(trajFirstCapReposition);
-        drive.turn(Math.toRadians(-135));
-        drive.followTrajectory(trajConeStack);
-        drive.followTrajectory(trajConeStackReposition);
-        drive.turn(Math.toRadians(-90));
-        drive.followTrajectory(trajSecondCap);
-        drive.followTrajectory(trajSecondCapReposition);
-        switch (park){
-            case 0:
-                drive.followTrajectory(trajp0);
-                break;
-            case 1:
-                drive.followTrajectory(trajp1);
-                break;
-            case 2:
-                drive.followTrajectory(trajp2);
-                break;
-            case 3:
-                drive.followTrajectory(trajp3);
-                break;
-        }
 
+            //
+            drive.followTrajectory(trajFirstCap);
+            drive.followTrajectory(trajFirstCapReposition);
+            drive.turn(Math.toRadians(-135));
+            drive.followTrajectory(trajConeStack);
+            drive.followTrajectory(trajConeStackReposition);
+            drive.turn(Math.toRadians(-90));
+            drive.followTrajectory(trajSecondCap);
+            drive.followTrajectory(trajSecondCapReposition);
+            switch (park) {
+                case 0:
+                    drive.followTrajectory(trajp0);
+                    break;
+                case 1:
+                    drive.followTrajectory(trajp1);
+                    break;
+                case 2:
+                    drive.followTrajectory(trajp2);
+                    break;
+                case 3:
+                    drive.followTrajectory(trajp3);
+                    break;
+            }
+        }
     }
 
     void tagToTelemetry(AprilTagDetection detection) {

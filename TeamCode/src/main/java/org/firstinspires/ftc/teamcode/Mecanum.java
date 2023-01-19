@@ -93,9 +93,9 @@ public class Mecanum extends OpMode {
     @Override
     public void loop() {
         leftStickForward = leftStickForward - this.gamepad2.left_stick_y/0.01;
-        if(this.gamepad2.left_stick_x==0)leftStickForward=0;
+        if(this.gamepad2.left_stick_y==0)leftStickForward=0;
         leftStickSide =this.gamepad2.left_stick_x;
-        botSpin =-this.gamepad2.right_stick_y;
+        botSpin =this.gamepad2.right_stick_x;
         denominator = Math.max(Math.abs(leftStickForward) + Math.abs(leftStickSide) + Math.abs(botSpin), 1);
         frontLeftPower = (leftStickForward + leftStickSide + botSpin) / denominator;
         rearRightPower = (leftStickForward + leftStickSide - botSpin) / denominator;
