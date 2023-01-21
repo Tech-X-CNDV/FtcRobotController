@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;//
 //import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
 //import org.openftc.easyopencv.OpenCvCamera;
 
-@TeleOp
+@Autonomous
 
 public class autonomie extends OpMode {
     private DcMotor leftFrontMotor = null;
@@ -60,10 +61,10 @@ public class autonomie extends OpMode {
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0.6);
-        rightFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
