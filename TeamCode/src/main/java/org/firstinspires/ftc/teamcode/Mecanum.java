@@ -131,6 +131,8 @@ class CRobot {
         }
     }
 
+    public void liftReset(){}
+
     public void log(Telemetry telemetry) {
         telemetry.addData("Claw position", claw.getPosition());
         telemetry.addData("Lift position", liftMotor.getCurrentPosition());
