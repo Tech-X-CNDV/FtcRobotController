@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -33,12 +34,18 @@ class CRobot {
     public Servo servoLeft;
     public Servo servoRight;
 
+
+    public TouchSensor liftSensor;
+
     public void init(Telemetry telemetry, HardwareMap hardwareMap) {
         telemetry.addData("Status", "Initialized");
+        tared = false;
+        hasCone = false;
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
         leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "rightRearMotor");
+        liftSensor = hardwareMap.get(TouchSensor.class,"touch");
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0.6);
@@ -54,9 +61,12 @@ class CRobot {
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         telemetry.update();
     }
 
+    boolean hasCone = false;
+    boolean tared = false;
     boolean clawExtended = false;
     boolean liftPower = true;
     boolean overrideLift = true;
@@ -70,7 +80,9 @@ class CRobot {
     }
 
     public void targetLiftDown() {
-        if (liftPos > 0) {
+        if(tared && liftPos >= 8)
+            liftPos--;
+        else if (liftPos > 0) {
             liftPos--;
         }
     }
@@ -88,12 +100,25 @@ class CRobot {
 
     public void overrideLiftUp() {
         liftMotor.setPower(1);
-        liftMotor.setTargetPosition(10000);
+        if(tared)
+            liftMotor.setTargetPosition(position[position.length-1]);
+        else
+            liftMotor.setTargetPosition(10000);
     }
 
     public void overrideLiftDown() {
         liftMotor.setPower(1);
-        liftMotor.setTargetPosition(-10000);
+        if(tared)
+            liftMotor.setTargetPosition(0);
+        else
+            liftMotor.setTargetPosition(-10000);
+    }
+
+    public void liftTaring(){
+        if(liftSensor.isPressed() && !tared){
+            tared = true;
+            resetLift();
+        }
     }
 
     public void overrideToggle() {
@@ -233,6 +258,9 @@ public class Mecanum extends OpMode {
             robot.targetLiftDown();
         }
         if (!this.gamepad1.a) pressA = true;
+
+        //calibrare lift
+        robot.liftTaring();
 
         //bumper
         if (this.gamepad1.right_bumper && pressRbumper == true) {
