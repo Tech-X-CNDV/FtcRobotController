@@ -45,7 +45,7 @@ class CRobot {
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
         leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "rightRearMotor");
-        liftSensor = hardwareMap.get(TouchSensor.class,"touch");
+        liftSensor = hardwareMap.get(TouchSensor.class, "touchSensor");
         liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
         claw = hardwareMap.get(Servo.class, "clawServo");
         claw.setPosition(0.6);
@@ -70,7 +70,7 @@ class CRobot {
     boolean clawExtended = false;
     boolean liftPower = true;
     boolean overrideLift = true;
-    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 1100, 2500, 3300, 4600, 5700, 7430};
+    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 1100, 2500, 3300, 4600, 5700, 5260};
     public int liftPos = 8, bumperPos = 0;
 
     public void targetLiftUp() {
@@ -80,7 +80,7 @@ class CRobot {
     }
 
     public void targetLiftDown() {
-        if(tared && liftPos >= 8)
+        if (tared && liftPos >= 8)
             liftPos--;
         else if (liftPos > 0) {
             liftPos--;
@@ -99,23 +99,15 @@ class CRobot {
     }
 
     public void overrideLiftUp() {
-        liftMotor.setPower(1);
-        if(tared)
-            liftMotor.setTargetPosition(position[position.length-1]);
-        else
-            liftMotor.setTargetPosition(10000);
+        if(liftMotor.getCurrentPosition() < 5300)liftMotor.setTargetPosition(liftMotor.getCurrentPosition()+300);
     }
 
     public void overrideLiftDown() {
-        liftMotor.setPower(1);
-        if(tared)
-            liftMotor.setTargetPosition(0);
-        else
-            liftMotor.setTargetPosition(-10000);
+        if(liftMotor.getCurrentPosition() > -5300)liftMotor.setTargetPosition(liftMotor.getCurrentPosition()-300);
     }
 
-    public void liftTaring(){
-        if(liftSensor.isPressed() && !tared){
+    public void liftTaring() {
+        if (liftSensor.isPressed() && !tared) {
             tared = true;
             resetLift();
         }
@@ -126,8 +118,11 @@ class CRobot {
     }
 
     public void resetLift() {
+        liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setTargetPosition(0);
         liftPos = 8;
     }
 
@@ -143,21 +138,18 @@ class CRobot {
 
     public void bumperMove(int bumperPos) {
         if (bumperPos % 2 == 0) {
-            servoLeft.setPosition(0.3);
-            servoRight.setPosition(0.7);
+            servoLeft.setPosition(0.35);
+            servoRight.setPosition(0.65);
         }
         if (bumperPos == 1) {
-            servoLeft.setPosition(0.75);
-            servoRight.setPosition(0.25);
+            servoLeft.setPosition(0.65);
+            servoRight.setPosition(0.35);
         }
         if (bumperPos == 3) {
-            servoLeft.setPosition(0.05);
-            servoRight.setPosition(0.95);
+            servoLeft.setPosition(0.15);
+            servoRight.setPosition(0.85);
         }
     }
-
-    public void liftReset(){}
-
     public void log(Telemetry telemetry) {
         telemetry.addData("Claw position", claw.getPosition());
         telemetry.addData("Lift position", liftMotor.getCurrentPosition());
@@ -208,8 +200,8 @@ public class Mecanum extends OpMode {
         //POSIBIL BUG!!!!!!!!!!!!
 
         //movement robot
-        leftStickForward = leftStickForward -this.gamepad1.left_stick_y/0.01;
-        if(this.gamepad1.left_stick_y==0) leftStickForward = 0;
+        leftStickForward = leftStickForward - this.gamepad1.left_stick_y / 0.01;
+        if (this.gamepad1.left_stick_y == 0) leftStickForward = 0;
         leftStickSide = this.gamepad1.left_stick_x * 1.1;
         botSpin = this.gamepad1.right_stick_x;
         denominator = Math.max(Math.abs(leftStickForward) + Math.abs(leftStickSide) + Math.abs(botSpin), 1);
@@ -234,9 +226,10 @@ public class Mecanum extends OpMode {
 
         if (!robot.overrideLift) robot.runLift(robot.liftPos);
         else {
-            if(this.gamepad1.left_trigger > 0) robot.overrideLiftDown();
+            if(robot.liftPower)robot.liftMotor.setPower(1);
+            else robot.liftMotor.setPower(0);
+            if (this.gamepad1.left_trigger > 0) robot.overrideLiftDown();
             else if (this.gamepad1.right_trigger > 0) robot.overrideLiftUp();
-            else robot.liftMotor.setTargetPosition(robot.liftMotor.getCurrentPosition());
         }
 
         if (this.gamepad1.dpad_down && pressDpDown) {
@@ -280,6 +273,7 @@ public class Mecanum extends OpMode {
         robot.log(telemetry);
         telemetry.addData("Left Stick Y", leftStickForward);
         telemetry.addData("Left Stick X", leftStickSide);
+        telemetry.addData("tar", robot.tared);
         telemetry.update();
     }
 
