@@ -138,16 +138,16 @@ class CRobot {
 
     public void bumperMove(int bumperPos) {
         if (bumperPos % 2 == 0) {
-            servoLeft.setPosition(0.35);
-            servoRight.setPosition(0.65);
+            servoLeft.setPosition(0.45);
+            servoRight.setPosition(0.55);
         }
         if (bumperPos == 1) {
-            servoLeft.setPosition(0.65);
-            servoRight.setPosition(0.35);
+            servoLeft.setPosition(0.75);
+            servoRight.setPosition(0.25);
         }
         if (bumperPos == 3) {
-            servoLeft.setPosition(0.15);
-            servoRight.setPosition(0.85);
+            servoLeft.setPosition(0.20);
+            servoRight.setPosition(0.80);
         }
     }
     public void log(Telemetry telemetry) {

@@ -4,10 +4,12 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 //import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
@@ -20,7 +22,7 @@ import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
 
-@TeleOp
+@Autonomous
 
 public class autonomie_mirror extends LinearOpMode {
     OpenCvCamera camera;
@@ -31,7 +33,7 @@ public class autonomie_mirror extends LinearOpMode {
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
-    double tagsize = 0.0762;
+    double tagsize = 0.045;
 
     int ID_TAG_OF_INTEREST_0 = 0;
     int ID_TAG_OF_INTEREST_1 = 9;
@@ -48,34 +50,31 @@ public class autonomie_mirror extends LinearOpMode {
 
         Pose2d startPose = new Pose2d(-35, -60, Math.toRadians(90));
         drive.setPoseEstimate(startPose);
-
-        Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
-                .forward(45) //dupa vine scanare Signal
+        Trajectory trajSignalDisplacement = drive.trajectoryBuilder(startPose)
+                .forward(55)
+                .build();
+        Trajectory trajSignalReposition = drive.trajectoryBuilder(trajSignalDisplacement.end())
                 .addDisplacementMarker(() -> {
-                    robot.bumperMove(0);
+                    robot.bumperMove(1);
                     robot.runLift(14);
                 })
-                .splineTo(new Vector2d(-29, 0), Math.toRadians(45))// lasat con
+                .back(10)
+                .build();
+        Trajectory trajFirstCap = drive.trajectoryBuilder(trajSignalReposition.end())
+                .splineTo(new Vector2d(-26, -3), Math.toRadians(45))// lasat con
                 //.forward(10)
-                .addDisplacementMarker(() -> {
-                    while(robot.liftMotor.isBusy()){}
-                    robot.clawSwitch();
-                })
                 .build();
         Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(15)
-                .addDisplacementMarker(() -> {
-                    robot.runLift(7);
-                    robot.bumperMove(1);
-                })
+                .back(12)
                 .build();
-        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .forward(26) //prindere con nou
+        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(135))))
+                .forward(26)
                 .build();
         Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
-                .back(14).build();
-        Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-90)))).
-                forward(5)//lasare con nou
+                .back(26)
+                .build();
+        Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135)))).
+                forward(12)
                 .build();
         Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
                 .back(5).build();
@@ -124,10 +123,6 @@ public class autonomie_mirror extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(100);
 
-        robot.init(telemetry, hardwareMap);
-
-        robot.bumperMove(1);
-        robot.clawSwitch();
 
         while (!isStarted() && !isStopRequested()) {
             ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
@@ -179,28 +174,43 @@ public class autonomie_mirror extends LinearOpMode {
 
         }
 
-
+        robot.init(telemetry, hardwareMap);
+        robot.liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        robot.bumperMove(1);
+        robot.clawSwitch();
+        drive.followTrajectory(trajSignalDisplacement);
+        drive.followTrajectory(trajSignalReposition);
         drive.followTrajectory(trajFirstCap);
+        while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(1000);
         drive.followTrajectory(trajFirstCapReposition);
-        drive.turn(Math.toRadians(45));
-        /*drive.followTrajectory(trajConeStack);
+        robot.runLift(9);
+        drive.turn(Math.toRadians(135));
+        drive.followTrajectory(trajConeStack);
         drive.followTrajectory(trajConeStackReposition);
-        drive.turn(Math.toRadians(-90));
+        drive.turn(Math.toRadians(-135));
         drive.followTrajectory(trajSecondCap);
+        /*
+        drive.turn(Math.toRadians(-90));
         drive.followTrajectory(trajSecondCapReposition);*/
 
         switch (park) {
             case 0:
                 drive.followTrajectory(trajp0);
+                while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
                 break;
             case 1:
                 drive.followTrajectory(trajp1);
+                while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
                 break;
             case 2:
                 drive.followTrajectory(trajp2);
+                while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
                 break;
             case 3:
                 drive.followTrajectory(trajp3);
+                while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
                 break;
         }
 
