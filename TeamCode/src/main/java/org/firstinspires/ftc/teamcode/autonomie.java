@@ -1,221 +1,111 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import org.openftc.apriltag.AprilTagDetection;
+import com.qualcomm.robotcore.util.ReadWriteFile;
 
-import java.util.ArrayList;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import static java.lang.Thread.sleep;
 
-@TeleOp
+import java.io.File;
 
-public class autonomie extends LinearOpMode {
-    OpenCvCamera camera;
-    WebcamName webcamName;
-    AprilTagDetectionPipeline parkTag;
-    static final double FEET_PER_METER = 3.28084;
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
-    double tagsize = 0.0762;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;//
+//import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
+//import org.openftc.easyopencv.OpenCvCamera;
 
-    int ID_TAG_OF_INTEREST_0 = 0;
-    int ID_TAG_OF_INTEREST_1 = 9;
-    int ID_TAG_OF_INTEREST_2 = 19;
-    AprilTagDetection tagOfInterest;
+@Autonomous
 
-    int park = 0;
+public class autonomie extends OpMode {
+    private DcMotor leftFrontMotor = null;
+    private DcMotor rightFrontMotor = null;
+    private DcMotor leftRearMotor = null;
+    private DcMotor rightRearMotor = null;
 
-    CRobot robot = new CRobot();
+    private DcMotor liftMotor;
+    private Servo claw;
+
+    private Servo servoLeft;
+    private Servo servoRight;
+
+    File deltaPozFile = AppUtil.getInstance().getSettingsFile("deltaPozFile.txt");
+    private ElapsedTime runtime = new ElapsedTime();
+    private double leftStickForward = 0;
+    private double leftStickSide = 0;
+    private double botSpin = 0;
+    private double denominator = 0;
+    private double frontLeftPower = 0;
+    private double frontRightPower = 0;
+    private double rearLeftPower = 0;
+    private double rearRightPower = 0;
+    boolean clawExtended = false;
+    boolean moveX = false, moveA = false, moveY = false, moveLbumper = false, bumperExtended = false, moveRbumper = false;
+    int position[] = {500, 700, 1800, 3200, 4800};
+    int vPos = 0;
+    int targetPosition;
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+    public void init() {
 
-        Pose2d startPose = new Pose2d(35, -60, Math.toRadians(90));
-        drive.setPoseEstimate(startPose);
+        telemetry.addData("Status", "Initialized");
+        leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
+        rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
+        leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
+        rightRearMotor = hardwareMap.get(DcMotor.class, "rightRearMotor");
 
-        Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
-
-                .forward(45) //dupa vine scanare Signal
-                .addDisplacementMarker(() -> {
-                    robot.bumperMove(0);
-                    robot.runLift(14);
-                })
-                .splineTo(new Vector2d(27, -2), Math.toRadians(135))// lasat con
-                //.forward(10)
-                .addDisplacementMarker(() -> {
-                    while(robot.liftMotor.isBusy()){}
-                    robot.clawSwitch();
-                })
-                .build();
-        Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(10)
-                .addDisplacementMarker(() -> {
-                    robot.runLift(7);
-                    robot.bumperMove(1);
-                })
-                .build();
-        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .forward(26) //prindere con nou
-                .build();
-        Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
-                .back(14).build();
-        Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-90)))).
-                forward(5)//lasare con nou
-                .build();
-        Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
-                .back(5).build();
-
-        Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45)))).forward(1).build();
-        Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeLeft(23)
-                .build();
-        Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .back(1)
-                .build();
-        Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeRight(23)
-                .build();
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        webcamName = hardwareMap.get(WebcamName.class, "camera");
-        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
-        parkTag = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-
-        camera.setPipeline(parkTag);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode) {
-
-            }
-        });
-
-      /* while(!tagFound && !opModeIsActive()) {
-       if(currentDetections.size() !=0)
-           for(AprilTagDetection tag : currentDetections)
-           {
-               if(tag.id ==1){tagFound=true;park=1;}
-                   else
-               if(tag.id == 10){tagFound=true;park=2;}
-                   else
-               if(tag.id == 19){tagFound=true;park=3;}
-                   else park=0;
-           }
-           telemetry.addData("park detection", park);
-       }*/
-
-        telemetry.setMsTransmissionInterval(100);
-
-        robot.init(telemetry, hardwareMap);
-
-        robot.bumperMove(1);
-        robot.clawSwitch();
-
-        while (!isStarted() && !isStopRequested()) {
-            ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
-            if (currentDetections.size() != 0) {
-                boolean tagFound = false;
-                for (AprilTagDetection tag : currentDetections) {
-                    if (tag.id == ID_TAG_OF_INTEREST_0 || tag.id == ID_TAG_OF_INTEREST_1 || tag.id == ID_TAG_OF_INTEREST_2) {
-                        tagOfInterest = tag;
-                        tagFound = true;
-                        break;
-                    }
-                }
-                if (tagFound) {
-                    telemetry.addLine("Tag of interest sighted\n\nLocationData:");
-                    tagToTelemetry(tagOfInterest);
-                } else {
-                    telemetry.addLine("Don't see tag of interest");
-                    if (tagOfInterest == null) {
-                        telemetry.addLine("(The tag has never been seen)");
-                    } else {
-                        telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                        tagToTelemetry(tagOfInterest);
-                    }
-                }
-
-                switch (tagOfInterest.id) {
-                    case 0:
-                        park = 1;
-                        break;
-                    case 9:
-                        park = 2;
-                        break;
-                    case 19:
-                        park = 3;
-                        break;
-                }
-            } else {
-                telemetry.addLine("Don't see tag of interest :(");
-
-                if (tagOfInterest == null) {
-                    telemetry.addLine("(The tag has never been seen)");
-                } else {
-                    telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                    tagToTelemetry(tagOfInterest);
-                }
-                sleep(10);
-            }
-            telemetry.update();
-
-        }
-
-
-        drive.followTrajectory(trajFirstCap);
-       drive.followTrajectory(trajFirstCapReposition);
-        drive.turn(Math.toRadians(-45));
-        /*drive.followTrajectory(trajConeStack);
-        drive.followTrajectory(trajConeStackReposition);
-        drive.turn(Math.toRadians(-90));
-        drive.followTrajectory(trajSecondCap);
-        drive.followTrajectory(trajSecondCapReposition);*/
-
-        switch (park) {
-            case 0:
-                drive.followTrajectory(trajp0);
-                break;
-            case 1:
-                drive.followTrajectory(trajp1);
-                break;
-            case 2:
-                drive.followTrajectory(trajp2);
-                break;
-            case 3:
-                drive.followTrajectory(trajp3);
-                break;
-        }
-
+        liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+        claw = hardwareMap.get(Servo.class, "clawServo");
+        claw.setPosition(0.6);
+        rightFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRearMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        telemetry.update();
+        liftMotor.setTargetPosition(0);
     }
 
-    void tagToTelemetry(AprilTagDetection detection) {
-        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("\nParking Spot = %d", park));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
-        telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
-        telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
-        telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
+    @Override
+    public void init_loop() {
+    }
 
+    @Override
+    public void start() {
+        runtime.reset();
+        leftFrontMotor.setPower(0.75);
+        rightFrontMotor.setPower(0.75);
+        leftRearMotor.setPower(0.75);
+        rightRearMotor.setPower(0.75);
+        try {
+            sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            leftFrontMotor.setPower(0);
+            rightFrontMotor.setPower(0);
+            leftRearMotor.setPower(0);
+            rightRearMotor.setPower(0);
+
+        }
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftRearMotor.setPower(0);
+        rightRearMotor.setPower(0);
+        runtime.reset();
+    }
+
+    @Override
+    public void loop() {
+        telemetry.update();
+    }
+
+    @Override
+    public void stop() {
     }
 }
