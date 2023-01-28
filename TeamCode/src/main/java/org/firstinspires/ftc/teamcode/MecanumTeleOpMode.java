@@ -1,5 +1,5 @@
 //package org.firstinspires.ftc.teamcode;
-
+/*
 import android.os.DropBoxManager;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -21,10 +21,11 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import java.io.File;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.CRobot;
 import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 @Disabled
-class CRobot {
+class CRobotp {
     public DcMotor leftFrontMotor;
     public DcMotor rightFrontMotor;
     public DcMotor leftRearMotor;
@@ -205,7 +206,7 @@ public class MecanumTeleOpMode extends OpMode {
         }
         if (!this.gamepad1.dpad_up) pressDpUp = true;
 
-        if (!robot.overrideLift) robot.runLift(robot.liftPos);
+        if (!robot.overrideLift){robot.runLift(robot.liftPos);}
         else {
             if(this.gamepad1.left_trigger > 0) robot.overrideLiftDown();
             else if (this.gamepad1.right_trigger > 0) robot.overrideLiftUp();
@@ -258,3 +259,4 @@ public class MecanumTeleOpMode extends OpMode {
     }
 }
 
+*/

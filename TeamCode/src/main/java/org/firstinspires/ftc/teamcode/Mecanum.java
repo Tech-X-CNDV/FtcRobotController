@@ -47,8 +47,8 @@ class CRobot {
         telemetry.addData("Status", "Initialized");
         tared = false;
         hasCone = false;
-        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
-        distanceSensor = hardwareMap.get(DistanceSensor.class, "colorSensor");
+        colorSensor = hardwareMap.get(ColorSensor.class, "distanceSensor");
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
         leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
@@ -60,8 +60,7 @@ class CRobot {
         liftPos = 8;
         servoLeft = hardwareMap.get(Servo.class, "servoLeft");
         servoRight = hardwareMap.get(Servo.class, "servoRight");
-        servoLeft.setPosition(0.3);
-        servoRight.setPosition(0.7);
+        bumperMove(1);
         rightFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         rightRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFrontMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -69,7 +68,6 @@ class CRobot {
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         telemetry.update();
     }
 
@@ -79,11 +77,16 @@ class CRobot {
     boolean clawExtended = false;
     boolean liftPower = true;
     boolean overrideLift = true;
-    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 1100, 2500, 3300, 4600, 5700, 5260};
+    int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 2300, 3900, 5260};
+    int stackpos[] = {1450,850,600,450,220,60};
     public int liftPos = 8, bumperPos = 0;
-
+    //60 - 220 - 450 600 - 940 - 1400
+    public void runLiftStack(int liftPos) {
+        liftMotor.setTargetPosition(stackpos[liftPos]);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
     public void targetLiftUp() {
-        if (liftPos < 14) {
+        if (liftPos < 11) {
             liftPos++;
         }
     }
@@ -108,11 +111,11 @@ class CRobot {
     }
 
     public void overrideLiftUp() {
-        if(liftMotor.getCurrentPosition() < 5300)liftMotor.setTargetPosition(liftMotor.getCurrentPosition()+300);
+            liftMotor.setTargetPosition(5260);
     }
 
     public void overrideLiftDown() {
-        if(liftMotor.getCurrentPosition() > -5300)liftMotor.setTargetPosition(liftMotor.getCurrentPosition()-300);
+            liftMotor.setTargetPosition(-5260);
     }
 
     public void liftTaring() {
@@ -136,6 +139,7 @@ class CRobot {
     }
 
     public void clawSwitch() {
+        if (hasCone)hasCone = false;
         if (!clawExtended) {
             claw.setPosition(0);
             clawExtended = true;
@@ -145,18 +149,19 @@ class CRobot {
         }
     }
 
-    public void automaticCone(){
-        if(armedBumper)
+    public void automaticCone() {
+        if (armedBumper)
             bumperMove(3);
-        if (!hasCone && tared){
-            switch ((int)distanceSensor.getDistance(DistanceUnit.CM)/5){
+        if (!hasCone && tared && armedBumper) {
+            switch ((int) distanceSensor.getDistance(DistanceUnit.CM) / 5) {
                 case 0:
-                    if (armedBumper)
                         bumperMove(2);
-                    if(distanceSensor.getDistance(DistanceUnit.CM) <= 1.5) {
-                        liftPos = 8;
+                    if (distanceSensor.getDistance(DistanceUnit.CM) <= 1.5 && colorSensor.blue() > 20) {
+                        liftPos = 7;
+                        runLift(7);
                         clawExtended = true;
                         clawSwitch();
+                        while(liftMotor.getCurrentPosition()>10){}
                         clawSwitch();
                         bumperMove(3);
                         hasCone = true;
@@ -164,13 +169,17 @@ class CRobot {
                     }
                     break;
                 case 1:
-                   liftPos = 9;
-                   break;
+                    if(distanceSensor.getDistance(DistanceUnit.CM)<=8.5){liftPos = 8;runLift(8);}
+                    break;
 
             }
         }
-        if(!armedBumper && liftMotor.getCurrentPosition() >= position[9])
-            bumperMove(3);
+        if (!armedBumper && liftMotor.getCurrentPosition() >= position[9] && hasCone)
+            bumperMove(1);
+    }
+
+    public void bumperArm() {
+        armedBumper= !armedBumper;
     }
 
     public void bumperMove(int bumperPos) {
@@ -179,14 +188,15 @@ class CRobot {
             servoRight.setPosition(0.55);
         }
         if (bumperPos == 1) {
-            servoLeft.setPosition(0.75);
-            servoRight.setPosition(0.25);
+            servoLeft.setPosition(0.70);
+            servoRight.setPosition(0.30);
         }
         if (bumperPos == 3) {
             servoLeft.setPosition(0.20);
             servoRight.setPosition(0.80);
         }
     }
+
     public void log(Telemetry telemetry) {
         telemetry.addData("Distance", distanceSensor.getDistance(DistanceUnit.CM));
         telemetry.addData("Claw position", claw.getPosition());
@@ -262,12 +272,13 @@ public class Mecanum extends OpMode {
         }
         if (!this.gamepad1.dpad_up) pressDpUp = true;
 
-        if (!robot.overrideLift) robot.runLift(robot.liftPos);
+        if (!robot.overrideLift){robot.automaticCone();robot.runLift(robot.liftPos);}
         else {
-            if(robot.liftPower)robot.liftMotor.setPower(1);
+            if (robot.liftPower) robot.liftMotor.setPower(1);
             else robot.liftMotor.setPower(0);
             if (this.gamepad1.left_trigger > 0) robot.overrideLiftDown();
             else if (this.gamepad1.right_trigger > 0) robot.overrideLiftUp();
+            else robot.liftMotor.setTargetPosition(robot.liftMotor.getCurrentPosition());
         }
 
         if (this.gamepad1.dpad_down && pressDpDown) {
@@ -295,8 +306,7 @@ public class Mecanum extends OpMode {
 
         //bumper
         if (this.gamepad1.right_bumper && pressRbumper == true) {
-            robot.bumperPos = (robot.bumperPos + 1) % 4;
-            robot.bumperMove(robot.bumperPos);
+            robot.bumperArm();
             pressRbumper = false;
         }
         if (!this.gamepad1.right_bumper) pressRbumper = true;
@@ -312,6 +322,8 @@ public class Mecanum extends OpMode {
         telemetry.addData("Left Stick Y", leftStickForward);
         telemetry.addData("Left Stick X", leftStickSide);
         telemetry.addData("tar", robot.tared);
+        telemetry.addData("blue", robot.colorSensor.blue());
+        telemetry.addData("armed", robot.armedBumper);
         telemetry.update();
     }
 

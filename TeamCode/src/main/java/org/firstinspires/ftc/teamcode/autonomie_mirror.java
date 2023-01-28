@@ -41,7 +41,7 @@ public class autonomie_mirror extends LinearOpMode {
     AprilTagDetection tagOfInterest;
 
     int park = 0;
-
+    int stack=1;
     CRobot robot = new CRobot();
 
     @Override
@@ -52,12 +52,12 @@ public class autonomie_mirror extends LinearOpMode {
         drive.setPoseEstimate(startPose);
         Trajectory trajSignalDisplacement = drive.trajectoryBuilder(startPose)
                 .forward(55)
-                .build();
-        Trajectory trajSignalReposition = drive.trajectoryBuilder(trajSignalDisplacement.end())
                 .addDisplacementMarker(() -> {
                     robot.bumperMove(1);
-                    robot.runLift(14);
+                    robot.runLift(11);
                 })
+                .build();
+        Trajectory trajSignalReposition = drive.trajectoryBuilder(trajSignalDisplacement.end())
                 .back(10)
                 .build();
         Trajectory trajFirstCap = drive.trajectoryBuilder(trajSignalReposition.end())
@@ -65,13 +65,16 @@ public class autonomie_mirror extends LinearOpMode {
                 //.forward(10)
                 .build();
         Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(12)
+                .back(13)
                 .build();
         Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(135))))
-                .forward(26)
+                .forward(30)
                 .build();
         Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
-                .back(26)
+                .back(30)
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
                 .build();
         Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135)))).
                 forward(12)
@@ -173,7 +176,7 @@ public class autonomie_mirror extends LinearOpMode {
             telemetry.update();
 
         }
-
+        //1150 , 850 590 330 90      0,
         robot.init(telemetry, hardwareMap);
         robot.liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         robot.bumperMove(1);
@@ -185,12 +188,22 @@ public class autonomie_mirror extends LinearOpMode {
         robot.clawSwitch();
         sleep(1000);
         drive.followTrajectory(trajFirstCapReposition);
-        robot.runLift(9);
+        robot.runLiftStack(0);
         drive.turn(Math.toRadians(135));
+
         drive.followTrajectory(trajConeStack);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(1000);
+        robot.runLiftStack(stack-2);
+        while(robot.liftMotor.getCurrentPosition()!=robot.liftMotor.getTargetPosition()){}
         drive.followTrajectory(trajConeStackReposition);
         drive.turn(Math.toRadians(-135));
         drive.followTrajectory(trajSecondCap);
+        robot.clawSwitch();
+        drive.followTrajectory(trajSecondCapReposition);
+        robot.runLift(7);
         /*
         drive.turn(Math.toRadians(-90));
         drive.followTrajectory(trajSecondCapReposition);*/
