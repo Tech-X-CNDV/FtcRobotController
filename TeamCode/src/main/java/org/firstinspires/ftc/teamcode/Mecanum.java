@@ -4,8 +4,11 @@ import android.os.DropBoxManager;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -15,6 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSequence;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
@@ -36,11 +40,15 @@ class CRobot {
 
 
     public TouchSensor liftSensor;
+    public ColorSensor colorSensor;
+    public DistanceSensor distanceSensor;
 
     public void init(Telemetry telemetry, HardwareMap hardwareMap) {
         telemetry.addData("Status", "Initialized");
         tared = false;
         hasCone = false;
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "colorSensor");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
         rightFrontMotor = hardwareMap.get(DcMotor.class, "rightFrontMotor");
         leftRearMotor = hardwareMap.get(DcMotor.class, "leftRearMotor");
@@ -65,6 +73,7 @@ class CRobot {
         telemetry.update();
     }
 
+    boolean armedBumper = false;
     boolean hasCone = false;
     boolean tared = false;
     boolean clawExtended = false;
@@ -136,6 +145,34 @@ class CRobot {
         }
     }
 
+    public void automaticCone(){
+        if(armedBumper)
+            bumperMove(3);
+        if (!hasCone && tared){
+            switch ((int)distanceSensor.getDistance(DistanceUnit.CM)/5){
+                case 0:
+                    if (armedBumper)
+                        bumperMove(2);
+                    if(distanceSensor.getDistance(DistanceUnit.CM) <= 1.5) {
+                        liftPos = 8;
+                        clawExtended = true;
+                        clawSwitch();
+                        clawSwitch();
+                        bumperMove(3);
+                        hasCone = true;
+                        armedBumper = false;
+                    }
+                    break;
+                case 1:
+                   liftPos = 9;
+                   break;
+
+            }
+        }
+        if(!armedBumper && liftMotor.getCurrentPosition() >= position[9])
+            bumperMove(3);
+    }
+
     public void bumperMove(int bumperPos) {
         if (bumperPos % 2 == 0) {
             servoLeft.setPosition(0.45);
@@ -151,6 +188,7 @@ class CRobot {
         }
     }
     public void log(Telemetry telemetry) {
+        telemetry.addData("Distance", distanceSensor.getDistance(DistanceUnit.CM));
         telemetry.addData("Claw position", claw.getPosition());
         telemetry.addData("Lift position", liftMotor.getCurrentPosition());
         telemetry.addData("Lift target", liftMotor.getTargetPosition());
