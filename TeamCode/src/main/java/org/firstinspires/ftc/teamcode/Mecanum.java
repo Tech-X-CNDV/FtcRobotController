@@ -78,7 +78,7 @@ class CRobot {
     boolean liftPower = true;
     boolean overrideLift = true;
     int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 2300, 3900, 5260};
-    int stackpos[] = {1450,850,600,450,220,60};
+    int stackpos[] = {1450,850,620,430,220,60};
     public int liftPos = 8, bumperPos = 0;
     //60 - 220 - 450 600 - 940 - 1400
     public void runLiftStack(int liftPos) {
