@@ -37,6 +37,7 @@ class CRobot {
     public Servo claw;
     public Servo servoLeft;
     public Servo servoRight;
+    public Servo servoRotator;
 
 
     public TouchSensor liftSensor;
@@ -60,6 +61,7 @@ class CRobot {
         liftPos = 8;
         servoLeft = hardwareMap.get(Servo.class, "servoLeft");
         servoRight = hardwareMap.get(Servo.class, "servoRight");
+        servoRotator = hardwareMap.get(Servo.class, "servoRotator");
         bumperMove(1);
         rightFrontMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         rightRearMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -77,6 +79,7 @@ class CRobot {
     boolean clawExtended = false;
     boolean liftPower = true;
     boolean overrideLift = true;
+    boolean frontClaw = true;
     int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 2300, 3900, 5260};
     int stackpos[] = {1450,850,620,430,220,60};
     public int liftPos = 8, bumperPos = 0;
@@ -160,6 +163,7 @@ class CRobot {
                         liftPos = 7;
                         runLift(7);
                         clawExtended = true;
+                        bumperMove(3);
                         clawSwitch();
                         while(liftMotor.getCurrentPosition()>10){}
                         clawSwitch();
@@ -176,6 +180,19 @@ class CRobot {
         }
         if (!armedBumper && liftMotor.getCurrentPosition() >= position[9] && hasCone)
             bumperMove(1);
+    }
+
+    public void rotateClaw(){
+        if(liftMotor.getCurrentPosition() >= (position[9]+position[10])/2){
+            if(frontClaw){
+                frontClaw = false;
+                servoRotator.setPosition(1);
+            }
+            else{
+                frontClaw = true;
+                servoRotator.setPosition(0);
+            }
+        }
     }
 
     public void bumperArm() {
@@ -219,7 +236,7 @@ public class Mecanum extends OpMode {
     public double frontRightPower = 0;
     public double rearLeftPower = 0;
     public double rearRightPower = 0;
-    boolean pressX = false, pressA = false, pressY = false, pressLbumper = false, pressRbumper = false, pressDpDown = false, pressDpUp = false;
+    boolean pressX = false, pressA = false, pressY = false, pressLbumper = false, pressRbumper = false, pressDpDown = false, pressDpUp = false, pressDpLeft = false;
     CRobot robot = new CRobot();
 
     public void init() {
@@ -248,10 +265,10 @@ public class Mecanum extends OpMode {
         //POSIBIL BUG!!!!!!!!!!!!
 
         //movement robot
-        leftStickForward = leftStickForward - this.gamepad1.left_stick_y / 0.01;
-        if (this.gamepad1.left_stick_y == 0) leftStickForward = 0;
-        leftStickSide = this.gamepad1.left_stick_x * 1.1;
-        botSpin = this.gamepad1.right_stick_x;
+        leftStickForward = leftStickForward - this.gamepad2.left_stick_y / 0.01;
+        if (this.gamepad2.left_stick_y == 0) leftStickForward = 0;
+        leftStickSide = this.gamepad2.left_stick_x * 1.1;
+        botSpin = this.gamepad2.right_stick_x;
         denominator = Math.max(Math.abs(leftStickForward) + Math.abs(leftStickSide) + Math.abs(botSpin), 1);
         frontLeftPower = (leftStickForward + leftStickSide + botSpin) / denominator;
         rearRightPower = (leftStickForward + leftStickSide - botSpin) / denominator;
@@ -272,7 +289,7 @@ public class Mecanum extends OpMode {
         }
         if (!this.gamepad1.dpad_up) pressDpUp = true;
 
-        if (!robot.overrideLift){robot.automaticCone();robot.runLift(robot.liftPos);}
+        if (!robot.overrideLift){robot.runLift(robot.liftPos);}
         else {
             if (robot.liftPower) robot.liftMotor.setPower(1);
             else robot.liftMotor.setPower(0);
@@ -303,7 +320,7 @@ public class Mecanum extends OpMode {
 
         //calibrare lift
         robot.liftTaring();
-
+        robot.automaticCone();
         //bumper
         if (this.gamepad1.right_bumper && pressRbumper == true) {
             robot.bumperArm();
@@ -316,7 +333,12 @@ public class Mecanum extends OpMode {
             pressX = false;
         }
         if (!this.gamepad1.x) pressX = true;
-
+        //rotire gheara
+        if(this.gamepad1.dpad_left && pressDpLeft == true){
+            robot.rotateClaw();
+            pressDpLeft = false;
+        }
+        if(!this.gamepad1.dpad_left) pressDpLeft = true;
         // telemetrie
         robot.log(telemetry);
         telemetry.addData("Left Stick Y", leftStickForward);
