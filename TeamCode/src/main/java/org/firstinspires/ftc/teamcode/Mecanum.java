@@ -48,6 +48,7 @@ class CRobot {
         telemetry.addData("Status", "Initialized");
         tared = false;
         hasCone = false;
+        keepDistance = false;
         colorSensor = hardwareMap.get(ColorSensor.class, "distanceSensor");
         distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "leftFrontMotor");
@@ -80,6 +81,7 @@ class CRobot {
     boolean liftPower = true;
     boolean overrideLift = true;
     boolean frontClaw = true;
+    boolean keepDistance = false;
     int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 2300, 3900, 5260};
     int stackpos[] = {1450,825,600,420,220,60};
     public int liftPos = 8, bumperPos = 0;
@@ -182,6 +184,15 @@ class CRobot {
             bumperMove(1);
     }
 
+    public boolean junctionPositioning(){
+        if(keepDistance && liftMotor.getCurrentPosition() >= position[8]){
+            if (distanceSensor.getDistance(DistanceUnit.CM) < 2 )
+            {
+                return true;}
+        }
+        return false;
+    }
+
     public void rotateClaw(){
         if(liftMotor.getCurrentPosition() >= (position[9]+position[10])/2){
             if(frontClaw){
@@ -236,7 +247,7 @@ public class Mecanum extends OpMode {
     public double frontRightPower = 0;
     public double rearLeftPower = 0;
     public double rearRightPower = 0;
-    boolean pressX = false, pressA = false, pressY = false, pressLbumper = false, pressRbumper = false, pressDpDown = false, pressDpUp = false, pressDpLeft = false;
+    boolean pressX = false, pressA = false, pressY = false, pressLbumper = false, pressRbumper = false, pressDpDown = false, pressDpUp = false, pressDpLeft = false, pressBumperG1 = false;
     CRobot robot = new CRobot();
 
     public void init() {
@@ -265,7 +276,11 @@ public class Mecanum extends OpMode {
         //POSIBIL BUG!!!!!!!!!!!!
 
         //movement robot
-        leftStickForward = leftStickForward - this.gamepad2.left_stick_y / 0.01;
+        if(robot.junctionPositioning()) {
+            leftStickForward = .5;
+        }
+            else
+            leftStickForward = leftStickForward - this.gamepad2.left_stick_y / 0.01;
         if (this.gamepad2.left_stick_y == 0) leftStickForward = 0;
         leftStickSide = this.gamepad2.left_stick_x * 1.1;
         botSpin = this.gamepad2.right_stick_x;
@@ -288,6 +303,12 @@ public class Mecanum extends OpMode {
             pressDpUp = false;
         }
         if (!this.gamepad1.dpad_up) pressDpUp = true;
+
+        if (this.gamepad2.right_bumper && pressBumperG1) {
+            robot.keepDistance = !robot.keepDistance;
+            pressBumperG1 = false;
+        }
+        if (!this.gamepad2.right_bumper) pressBumperG1 = true;
 
         if (!robot.overrideLift){robot.runLift(robot.liftPos);}
         else {
