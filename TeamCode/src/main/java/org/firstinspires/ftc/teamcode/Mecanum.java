@@ -83,7 +83,7 @@ class CRobot {
     boolean frontClaw = true;
     boolean keepDistance = false;
     int position[] = {-7420, -5700, -4600, -3300, -2500, -1100, -600, 0, 600, 2300, 3900, 5260};
-    int stackpos[] = {1450,825,600,420,220,60};
+    int stackpos[] = {1450,810,600,420,220,60};
     public int liftPos = 8, bumperPos = 0;
     //60 - 220 - 450 600 - 940 - 1400
     public void runLiftStack(int liftPos) {
@@ -161,7 +161,7 @@ class CRobot {
             switch ((int) distanceSensor.getDistance(DistanceUnit.CM) / 5) {
                 case 0:
                         bumperMove(2);
-                    if (distanceSensor.getDistance(DistanceUnit.CM) <= 1.5 && colorSensor.blue() > 20) {
+                    if (distanceSensor.getDistance(DistanceUnit.CM) <= 1.5 && (colorSensor.blue() > 20 || colorSensor.red() > 20)) {
                         liftPos = 7;
                         runLift(7);
                         clawExtended = true;
@@ -276,11 +276,11 @@ public class Mecanum extends OpMode {
         //POSIBIL BUG!!!!!!!!!!!!
 
         //movement robot
-        if(robot.junctionPositioning()) {
-            leftStickForward = .5;
-        }
-            else
-            leftStickForward = leftStickForward - this.gamepad2.left_stick_y / 0.01;
+        //if(robot.junctionPositioning()) {
+        //    leftStickForward = .5;
+        //}
+          //  else
+        leftStickForward = leftStickForward - this.gamepad2.left_stick_y / 0.01;
         if (this.gamepad2.left_stick_y == 0) leftStickForward = 0;
         leftStickSide = this.gamepad2.left_stick_x * 1.1;
         botSpin = this.gamepad2.right_stick_x;

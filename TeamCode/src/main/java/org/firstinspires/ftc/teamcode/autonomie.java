@@ -84,7 +84,7 @@ public class autonomie extends OpMode {
         leftRearMotor.setPower(0.75);
         rightRearMotor.setPower(0.75);
         try {
-            sleep(2000);
+            sleep(750);
         } catch (InterruptedException e) {
             e.printStackTrace();
             leftFrontMotor.setPower(0);
