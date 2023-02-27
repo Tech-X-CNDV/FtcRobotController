@@ -16,15 +16,27 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 12)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-35, -60, Math.toRadians(90)))
+                        drive.trajectorySequenceBuilder(new Pose2d(35, -60, Math.toRadians(90)))
                                 .forward(55)
                                 .back(6)
-                                .splineTo(new Vector2d(-27.5, -3.5), Math.toRadians(45))
-                                .lineToSplineHeading(new Pose2d(-40, -12, Math.toRadians(180)))
+                                .lineToSplineHeading(new Pose2d(26.5, -2.5, Math.toRadians(135)))
+                                .back(5)
+                                .splineToSplineHeading(new Pose2d(55, -12, Math.toRadians(-0)),0)
+                                .forward(10)
+                                .back(10)
+                                .splineToSplineHeading(new Pose2d(26.5, -2.5, Math.toRadians(135)), Math.toRadians(135))
+                                /*
+                                .forward(55)
+                                .back(6)
+                                .lineToSplineHeading(new Pose2d(26.5, -2.5, Math.toRadians(135)))
+                                .back(5)
+                                .lineToSplineHeading(new Pose2d(-40, -11.5, Math.toRadians(180)))
                                 //.splineToSplineHeading(new Pose2d(-55, -12, Math.toRadians(180)),0)
-                                .forward(23)
-                                .back(15)
-                                .lineToSplineHeading(new Pose2d(-29, -5, Math.toRadians(45)))
+                                .forward(24)
+                                .back(20)
+                                .lineToSplineHeading(new Pose2d(-30.5, -6.5, Math.toRadians(45)))
+
+                                 */
                                 .build()
                 );
 

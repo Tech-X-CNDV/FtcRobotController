@@ -1,31 +1,22 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-//import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
 
 @Autonomous
 
-public class autonomie_mirror extends LinearOpMode {
+public class autonomie_stanga extends LinearOpMode {
     OpenCvCamera camera;
     WebcamName webcamName;
     AprilTagDetectionPipeline parkTag;
@@ -108,6 +99,8 @@ public class autonomie_mirror extends LinearOpMode {
                 .back(6)
                 .build();
         Trajectory FirstCap = drive.trajectoryBuilder(SignalReposition.end())
+                //.splineTo(new Vector2d(-27.5, -3.5), Math.toRadians(45))// lasat con
+                //.splineTo(new Vector2d(jx, jy), Math.toRadians(45))// lasat con
                 .lineToSplineHeading(new Pose2d(jx, jy, Math.toRadians(45)))
                 .build();
         Trajectory FirstCapBack = drive.trajectoryBuilder(FirstCap.end())
@@ -117,7 +110,7 @@ public class autonomie_mirror extends LinearOpMode {
                 .addDisplacementMarker(() -> {
                     robot.runLiftStack(0);
                 })
-                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .splineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)),Math.toRadians(0))
                 .build();
         Trajectory FirstStack = drive.trajectoryBuilder(FirstCapRepo.end())
                 .forward(18.5)
@@ -129,9 +122,46 @@ public class autonomie_mirror extends LinearOpMode {
                 .back(22)
                 .build();
         Trajectory SecondCap = drive.trajectoryBuilder(FirstStackRepo.end())
-                 .lineToSplineHeading(new Pose2d(jx-0.65, jy-0.65, Math.toRadians(45)))
+                 .splineToSplineHeading(new Pose2d(jx-0.65, jy-0.65, Math.toRadians(45)),Math.toRadians(45))
+                //.lineToSplineHeading(new Pose2d(-31.5, -2.5, Math.toRadians(45)))
                 .build();
-        Trajectory trajp2 = drive.trajectoryBuilder(SecondCap.end())
+        Trajectory SecondCapBack = drive.trajectoryBuilder(SecondCap.end())
+                .back(7)
+                .build();
+        Trajectory SecondCapRepo = drive.trajectoryBuilder(SecondCapBack.end())
+                .addDisplacementMarker( () -> {
+                    // robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory SecondStack = drive.trajectoryBuilder(SecondCapRepo.end())
+                .forward(19.5)
+                .build();
+        Trajectory SecondStackRepo = drive.trajectoryBuilder(SecondStack.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(22)
+                .build();
+        Trajectory ThirdCap = drive.trajectoryBuilder(SecondStackRepo.end())
+                .addDisplacementMarker(() -> {
+                    // robot.rotateClaw();
+                })
+                .lineToSplineHeading(new Pose2d(jx-0.65, jy-0.65, Math.toRadians(45)))
+                // .lineToSplineHeading(new Pose2d(-29, -5, Math.toRadians(45)))
+                .build();
+        Trajectory ThirdCapBack = drive.trajectoryBuilder(ThirdCap.end())
+                .back(6)
+                .build();
+        Trajectory ThirdCapRepo = drive.trajectoryBuilder(ThirdCapBack.end())
+                .addDisplacementMarker( () -> {
+                    //  robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory trajp2 = drive.trajectoryBuilder(ThirdCap.end())
                 .addDisplacementMarker(3, () -> {
                     //  robot.rotateClaw();
                     robot.runLiftStack(0);
@@ -141,7 +171,7 @@ public class autonomie_mirror extends LinearOpMode {
         Trajectory trajp2ex = drive.trajectoryBuilder(trajp2.end())
                 .lineToSplineHeading(new Pose2d(sx+10, sy, Math.toRadians(180)))
                 .build();
-        Trajectory trajp1 = drive.trajectoryBuilder(SecondCap.end())
+        Trajectory trajp1 = drive.trajectoryBuilder(ThirdCap.end())
                 .addDisplacementMarker(5, () -> {
                     //  robot.rotateClaw();
                     robot.runLiftStack(0);
@@ -151,7 +181,7 @@ public class autonomie_mirror extends LinearOpMode {
         Trajectory trajp1ex = drive.trajectoryBuilder(trajp1.end())
                 .forward(19)
                 .build();
-        Trajectory trajp3 = drive.trajectoryBuilder(SecondCap.end())
+        Trajectory trajp3 = drive.trajectoryBuilder(ThirdCap.end())
                 .addDisplacementMarker(3, () -> {
                     //  robot.rotateClaw();
                     robot.runLiftStack(0);
@@ -220,16 +250,6 @@ public class autonomie_mirror extends LinearOpMode {
         drive.followTrajectory(FirstCap);
         Cap();
         //drive.followTrajectory(FirstCapBack);
-        for(int i=1;i<=4;i++)
-        {
-            drive.followTrajectory(FirstCapRepo);
-            drive.followTrajectory(FirstStack);
-            Stack();
-            drive.followTrajectory(FirstStackRepo);
-            drive.followTrajectory(SecondCap);
-            Cap();
-        }
-        /*
         drive.followTrajectory(FirstCapRepo);
         drive.followTrajectory(FirstStack);
         Stack();
@@ -244,8 +264,6 @@ public class autonomie_mirror extends LinearOpMode {
         drive.followTrajectory(ThirdCap);
         //drive.followTrajectory(ThirdCapBack);
         Cap();
-
-         */
         switch (park) {
             case 0:
                 drive.followTrajectory(trajp2);
@@ -272,50 +290,6 @@ public class autonomie_mirror extends LinearOpMode {
                 }
                 break;
         }
-        /*
-        Trajectory SecondCapBack = drive.trajectoryBuilder(SecondCap.end())
-                .back(7)
-                .build();
-        Trajectory SecondCapRepo = drive.trajectoryBuilder(SecondCapBack.end())
-                .addDisplacementMarker( () -> {
-                    // robot.rotateClaw();
-                    robot.runLiftStack(0);
-                })
-                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
-                .build();
-        Trajectory SecondStack = drive.trajectoryBuilder(SecondCapRepo.end())
-                .forward(19.5)
-                .build();
-        Trajectory SecondStackRepo = drive.trajectoryBuilder(SecondStack.end())
-                .addDisplacementMarker(() -> {
-                    robot.runLift(11);
-                })
-                .back(22)
-                .build();
-        Trajectory ThirdCap = drive.trajectoryBuilder(SecondStackRepo.end())
-                .addDisplacementMarker(() -> {
-                    // robot.rotateClaw();
-                })
-                .lineToSplineHeading(new Pose2d(jx-0.65, jy-0.65, Math.toRadians(45)))
-                // .lineToSplineHeading(new Pose2d(-29, -5, Math.toRadians(45)))
-                .build();
-        Trajectory ThirdCapBack = drive.trajectoryBuilder(ThirdCap.end())
-                .back(6)
-                .build();
-        Trajectory ThirdCapRepo = drive.trajectoryBuilder(ThirdCapBack.end())
-                .addDisplacementMarker( () -> {
-                    //  robot.rotateClaw();
-                    robot.runLiftStack(0);
-                })
-                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
-                .build();
-        Trajectory ThirdStack = drive.trajectoryBuilder(ThirdCapRepo.end())
-                .forward(19.5)
-                .build();
-        Trajectory ThirdStackRepo = drive.trajectoryBuilder(ThirdStack.end())
-                .back(22)
-                .build();
-         */
         //1150 , 850 590 330 90      0,
         //
         /*

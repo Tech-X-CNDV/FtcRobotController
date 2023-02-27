@@ -110,7 +110,7 @@ public class autonomiev2 extends LinearOpMode {
 
         int park = 0;
         robot.init(telemetry, hardwareMap);
-        robot.bumperMove(1);
+        //obot.bumperMove(1);
         robot.clawSwitch();
 
         while (!isStarted() && !isStopRequested()) {

@@ -4,13 +4,16 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
+//import org.firstinspires.ftc.teamcode.auton.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -20,18 +23,24 @@ import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
 
-@TeleOp
+@Autonomous
 
 public class autonomie_alt extends LinearOpMode {
     OpenCvCamera camera;
     WebcamName webcamName;
     AprilTagDetectionPipeline parkTag;
     static final double FEET_PER_METER = 3.28084;
+    double fx = 925.2352;
+    double fy = 925.2352;
+    double cx = 643.432;
+    double cy = 355.991785711;
+    /*
     double fx = 578.272;
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
-    double tagsize = 0.0762;
+    */
+    double tagsize = 0.035;
 
     int ID_TAG_OF_INTEREST_0 = 0;
     int ID_TAG_OF_INTEREST_1 = 9;
@@ -39,67 +48,46 @@ public class autonomie_alt extends LinearOpMode {
     AprilTagDetection tagOfInterest;
 
     int park = 0;
-
+    int stack = 1;
+    double jx=-29.75,jy=-1.5;
+    double sx=-45,sy=-11.25;
     CRobot robot = new CRobot();
+
+    public void Cap() {
+        while (robot.liftMotor.getCurrentPosition() <= robot.liftMotor.getTargetPosition() - 2) {}
+        robot.liftMotor.setTargetPosition(robot.position[11]-200);
+        robot.liftMotor.setPower(1);
+        while (robot.liftMotor.getCurrentPosition() >= robot.liftMotor.getTargetPosition() + 2) {}
+        robot.clawSwitch();
+        robot.liftMotor.setTargetPosition(robot.position[11]);
+        sleep(300);
+    }
+
+    public void Stack() {
+        robot.runLiftStack(stack);
+        stack++;
+        while (robot.liftMotor.getCurrentPosition() >= robot.liftMotor.getTargetPosition()) {
+        }
+        robot.clawSwitch();
+        sleep(500);
+        robot.runLiftStack(stack - 2);
+        while (robot.liftMotor.getCurrentPosition() <= robot.liftMotor.getTargetPosition() - 5) {
+        }
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        Pose2d startPose = new Pose2d(35, -60, Math.toRadians(90));
-        drive.setPoseEstimate(startPose);
-
-        Trajectory trajFirstCap = drive.trajectoryBuilder(startPose)
-                .strafeLeft(23)
-                .addDisplacementMarker(() -> {
-                    robot.bumperMove(0);
-                    robot.runLift(14);
-                })
-                .forward(30)
-                .splineTo(new Vector2d(21,-3), Math.toRadians(45))
-                .addDisplacementMarker(() -> {
-                    while(robot.liftMotor.isBusy()){}
-                    robot.clawSwitch();
-                })
-                .build();
-        Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
-                .back(12)
-                .addDisplacementMarker(() -> {
-                    robot.runLift(7);
-                    robot.bumperMove(1);
-                })
-                .build();
-       // Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-           //     .forward(26) //prindere con nou
-             //   .build();
-        //Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
-        //        .back(14).build();
-       // Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-90)))).
-             //   forward(5)//lasare con nou
-              //  .build();
-       // Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
-              //  .back(5).build();
-
-        Trajectory trajp0 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45)))).forward(1).build();
-        Trajectory trajp1 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .forward(1)
-                .build();
-        Trajectory trajp2 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeRight(23)
-                .build();
-        Trajectory trajp3 = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-45))))
-                .strafeRight(46)
-                .build();
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcamName = hardwareMap.get(WebcamName.class, "camera");
         camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
         parkTag = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-
         camera.setPipeline(parkTag);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
+                // camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
             }
 
             @Override
@@ -108,27 +96,118 @@ public class autonomie_alt extends LinearOpMode {
             }
         });
 
-      /* while(!tagFound && !opModeIsActive()) {
-       if(currentDetections.size() !=0)
-           for(AprilTagDetection tag : currentDetections)
-           {
-               if(tag.id ==1){tagFound=true;park=1;}
-                   else
-               if(tag.id == 10){tagFound=true;park=2;}
-                   else
-               if(tag.id == 19){tagFound=true;park=3;}
-                   else park=0;
-           }
-           telemetry.addData("park detection", park);
-       }*/
-
         telemetry.setMsTransmissionInterval(100);
-
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        // -24 0 11 11
+        Pose2d startPose = new Pose2d(-35, -60, Math.toRadians(90));
+        drive.setPoseEstimate(startPose);
+        Trajectory SignalDisplacement = drive.trajectoryBuilder(startPose)
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .forward(55)
+                .build();
+        Trajectory SignalReposition = drive.trajectoryBuilder(SignalDisplacement.end())
+                .back(6)
+                .build();
+        Trajectory FirstCap = drive.trajectoryBuilder(SignalReposition.end())
+                //.splineTo(new Vector2d(-27.5, -3.5), Math.toRadians(45))// lasat con
+                //.splineTo(new Vector2d(jx, jy), Math.toRadians(45))// lasat con
+                .lineToSplineHeading(new Pose2d(jx, jy, Math.toRadians(45)))
+                .build();
+        Trajectory FirstCapBack = drive.trajectoryBuilder(FirstCap.end())
+                .back(7)
+                .build();
+        Trajectory FirstCapRepo = drive.trajectoryBuilder(FirstCapBack.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory FirstStack = drive.trajectoryBuilder(FirstCapRepo.end())
+                .forward(18.5)
+                .build();
+        Trajectory FirstStackRepo = drive.trajectoryBuilder(FirstStack.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(22)
+                .build();
+        Trajectory SecondCap = drive.trajectoryBuilder(FirstStackRepo.end())
+                .lineToSplineHeading(new Pose2d(jx-0.65, jy-0.65, Math.toRadians(45)))
+                //.lineToSplineHeading(new Pose2d(-31.5, -2.5, Math.toRadians(45)))
+                .build();
+        Trajectory SecondCapBack = drive.trajectoryBuilder(SecondCap.end())
+                .back(7)
+                .build();
+        Trajectory SecondCapRepo = drive.trajectoryBuilder(SecondCapBack.end())
+                .addDisplacementMarker( () -> {
+                    // robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory SecondStack = drive.trajectoryBuilder(SecondCapRepo.end())
+                .forward(19.5)
+                .build();
+        Trajectory SecondStackRepo = drive.trajectoryBuilder(SecondStack.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(22)
+                .build();
+        Trajectory ThirdCap = drive.trajectoryBuilder(SecondStackRepo.end())
+                .addDisplacementMarker(() -> {
+                    // robot.rotateClaw();
+                })
+                .lineToSplineHeading(new Pose2d(jx-1, jy-1, Math.toRadians(45)))
+                // .lineToSplineHeading(new Pose2d(-29, -5, Math.toRadians(45)))
+                .build();
+        Trajectory ThirdCapBack = drive.trajectoryBuilder(ThirdCap.end())
+                .back(6)
+                .build();
+        Trajectory ThirdCapRepo = drive.trajectoryBuilder(ThirdCapBack.end())
+                .addDisplacementMarker( () -> {
+                    //  robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory trajp2 = drive.trajectoryBuilder(ThirdCap.end())
+                .addDisplacementMarker(3, () -> {
+                    //  robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .back(10)
+                .build();
+        Trajectory trajp2ex = drive.trajectoryBuilder(trajp2.end())
+                .lineToSplineHeading(new Pose2d(sx+10, sy, Math.toRadians(180)))
+                .build();
+        Trajectory trajp1 = drive.trajectoryBuilder(ThirdCap.end())
+                .addDisplacementMarker(5, () -> {
+                    //  robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .lineToSplineHeading(new Pose2d(sx, sy, Math.toRadians(180)))
+                .build();
+        Trajectory trajp1ex = drive.trajectoryBuilder(trajp1.end())
+                .forward(19)
+                .build();
+        Trajectory trajp3 = drive.trajectoryBuilder(ThirdCap.end())
+                .addDisplacementMarker(3, () -> {
+                    //  robot.rotateClaw();
+                    robot.runLiftStack(0);
+                })
+                .back(10)
+                .build();
+        Trajectory trajp3ex = drive.trajectoryBuilder(trajp3.end())
+                .lineToSplineHeading(new Pose2d(-14, sy, Math.toRadians(-90)))
+                .build();
         robot.init(telemetry, hardwareMap);
-
-        robot.bumperMove(1);
+        //robot.liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //robot.bumperMove(1);
+       // robot.servoRotator.setPosition(0);
         robot.clawSwitch();
-
         while (!isStarted() && !isStopRequested()) {
             ArrayList<AprilTagDetection> currentDetections = parkTag.getLatestDetections();
             if (currentDetections.size() != 0) {
@@ -178,32 +257,178 @@ public class autonomie_alt extends LinearOpMode {
             telemetry.update();
 
         }
-
-
-        drive.followTrajectory(trajFirstCap);
-        // drive.followTrajectory(trajFirstCapReposition);
-        //drive.turn(Math.toRadians(-45));
-        /*drive.followTrajectory(trajConeStack);
-        drive.followTrajectory(trajConeStackReposition);
-        drive.turn(Math.toRadians(-90));
-        drive.followTrajectory(trajSecondCap);
-        drive.followTrajectory(trajSecondCapReposition);*/
-
+        drive.followTrajectory(SignalDisplacement);
+        drive.followTrajectory(SignalReposition);
+        drive.followTrajectory(FirstCap);
+        Cap();
+        //drive.followTrajectory(FirstCapBack);
+        drive.followTrajectory(FirstCapRepo);
+        drive.followTrajectory(FirstStack);
+        Stack();
+        drive.followTrajectory(FirstStackRepo);
+        drive.followTrajectory(SecondCap);
+        Cap();
+        //drive.followTrajectory(SecondCapBack);
+        drive.followTrajectory(SecondCapRepo);
+        drive.followTrajectory(SecondStack);
+        Stack();
+        drive.followTrajectory(SecondStackRepo);
+        drive.followTrajectory(ThirdCap);
+        //drive.followTrajectory(ThirdCapBack);
+        Cap();
         switch (park) {
             case 0:
-                drive.followTrajectory(trajp0);
+                drive.followTrajectory(trajp2);
+                drive.followTrajectory(trajp2ex);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
                 break;
             case 1:
                 drive.followTrajectory(trajp1);
+                drive.followTrajectory(trajp1ex);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
                 break;
             case 2:
                 drive.followTrajectory(trajp2);
+                drive.followTrajectory(trajp2ex);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
                 break;
             case 3:
                 drive.followTrajectory(trajp3);
+                drive.followTrajectory(trajp3ex);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
                 break;
         }
+        //1150 , 850 590 330 90      0,
+        //
+        /*
+        drive.followTrajectory(trajSignalDisplacement);
+        drive.followTrajectory(trajSignalReposition);
+        //
+        drive.followTrajectory(trajFirstCap);
+       // while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(200);
+        drive.followTrajectory(FirstCapRepoV3);
+        drive.followTrajectory(ConeStackV3);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(200);
+        robot.runLiftStack(stack-2);
+        while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()){}
+        drive.followTrajectory(trajConeStackRepositionV2);
+        drive.followTrajectory(trajSecondCapV2);
+        while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()-5){}
+        robot.clawSwitch();
+        sleep(200);
+        drive.followTrajectory(trajSecondCapRepositionV2);
+        drive.followTrajectory(trajConeStack2V2);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()+10){}
+        robot.clawSwitch();
+        sleep(200);
+        robot.runLiftStack(stack-2);
+        drive.followTrajectory(trajConeStackReposition2V2);
+        drive.followTrajectory(trajThirdCapV2);
+        while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()-5){}
+        robot.clawSwitch();
+        sleep(200);
 
+        drive.followTrajectory(trajFirstCapReposition);
+        */
+        /*
+        drive.followTrajectory(FirstCapRepoV3);
+        drive.followTrajectory(ConeStackV3);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(300);
+        robot.runLiftStack(stack - 2);
+        while(robot.liftMotor.getCurrentPosition()<=(robot.liftMotor.getTargetPosition()-10)){}
+        drive.followTrajectory(ConeStackRetractV3);
+       // drive.followTrajectory(FirstCapRepoV3);
+        drive.followTrajectory(SecondCapV3);
+        robot.clawSwitch();
+        sleep(300);
+        drive.followTrajectory(SecondCapRepoV3);
+        drive.followTrajectory(ConeStackSecondV3);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(300);
+        robot.runLiftStack(stack - 2);
+        while(robot.liftMotor.getCurrentPosition()<=(robot.liftMotor.getTargetPosition()-10)){}
+        drive.followTrajectory(ConeStackSecondRetractV3);
+        while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()){}
+        drive.followTrajectory(ThirdCapV3);
+        sleep(500);
+        robot.clawSwitch();
+        sleep(200);
+        */
+        /*
+        drive.turn(Math.toRadians(135));
+        drive.followTrajectory(trajConeStack);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(300);
+        robot.runLiftStack(stack - 2);
+        while(robot.liftMotor.getCurrentPosition()<=(robot.liftMotor.getTargetPosition()-10)){}
+        drive.followTrajectory(trajConeStackRepositionV2);
+        drive.followTrajectory(trajSecondCapV2);
+        robot.clawSwitch();
+        sleep(300);
+        drive.followTrajectory(trajSecondCapRepositionV2);
+        drive.followTrajectory(trajConeStack2V2);
+        robot.runLiftStack(stack);stack++;
+        while(robot.liftMotor.getCurrentPosition()>=robot.liftMotor.getTargetPosition()){}
+        robot.clawSwitch();
+        sleep(300);
+        robot.runLiftStack(stack - 2);
+        while(robot.liftMotor.getCurrentPosition()<=(robot.liftMotor.getTargetPosition()-10)){}
+        drive.followTrajectory(trajConeStackReposition2V2);
+        while(robot.liftMotor.getCurrentPosition()<=robot.liftMotor.getTargetPosition()){}
+        drive.followTrajectory(trajThirdCapV2);
+        sleep(500);
+        robot.clawSwitch();
+        sleep(200);
+        */
+        /*
+        drive.followTrajectory(trajSecondCapRepositionV2);
+        robot.runLiftStack(stack - 3);
+        while(robot.liftMotor.getCurrentPosition()<=(robot.liftMotor.getTargetPosition()-10)){}
+        */
+        /*
+        drive.turn(Math.toRadians(-90));
+        drive.followTrajectory(trajSecondCapReposition);*/
+        /*
+        switch (park) {
+            case 0:
+                drive.followTrajectory(trajp0);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
+                break;
+            case 1:
+                drive.followTrajectory(trajp1);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
+                break;
+            case 2:
+                drive.followTrajectory(trajp2);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
+                break;
+            case 3:
+                drive.followTrajectory(trajp3);
+                while (robot.liftMotor.getCurrentPosition() != robot.liftMotor.getTargetPosition()) {
+                }
+                break;
+        }
+        */
     }
 
     void tagToTelemetry(AprilTagDetection detection) {
@@ -218,3 +443,154 @@ public class autonomie_alt extends LinearOpMode {
 
     }
 }
+/*
+Salut ! Mă numesc Luca si fac parte din departamentul de programare. La fel ca si corpul robotului, creierul acestuia, adica programele folosite in insufletirea acestui s-au schimbat si adaptat la fel de mult.
+
+Pentru cod, am folosit aplicatia Android Studio, in timp ce in anii trecuti foloseam OnBotJava. Aceasta alegere a fost motivata de diversele imbunatatiri pe care le aduce Android Studio, precum integrarea GitHub ului ce ne a ajutat enorm in fluidizarea procesului de coding.
+
+Pentru TeleOp, am creat un cod in care am segmentat fiecare actiune a robotului in cate o functie. Acest lucru ne a permis sa ne focusam pe asigurarea si imbunatatirea controlului driverilor fara a ne complica prea mult cu structurarea. Pe parcursul realizarii codului, am comunicat cu driverii, unul dintre ei fiind eu, pentru a face dirijarea robotului o munca cat mai usoara si intuitiva.
+
+Pentru autonomie, folosind modulele de odometrie si libraria roadrunner am dat viata robotului in acele 30 de secunde de aur. Procesul realizarii codului pentru autonomie a fost unul foarte amanuntit, bazat pe mai multe etape. In primul rand, am gandit o strategie de joc a robotului, bazata pe capabilitatiile robotului. Dupa aceea, am trecut strategia respectiva prin libraria MeepMeep, cu ajutorul careia am putut analiza o simulare aproximativa a  robotului pe teren. In final, am aplicat si am modificat codul final pe robotul fizic.
+
+*/
+ /*
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+        Pose2d startPose = new Pose2d(-35, -60, Math.toRadians(90));
+        drive.setPoseEstimate(startPose);
+        Trajectory trajSignalDisplacement = drive.trajectoryBuilder(startPose)
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .forward(55)
+                .build();
+        Trajectory trajSignalReposition = drive.trajectoryBuilder(trajSignalDisplacement.end())
+                .back(10)
+                .build();
+        Trajectory trajFirstCap = drive.trajectoryBuilder(trajSignalReposition.end())
+                .splineTo(new Vector2d(-28, -2.5), Math.toRadians(45))// lasat con
+                //.forward(10)
+                .build();
+        //Variant 2
+        Trajectory FirstCapRepoV3 = drive.trajectoryBuilder(trajFirstCap.end())
+                .lineToSplineHeading(new Pose2d(-35,-10,Math.toRadians(180)))
+                .addDisplacementMarker(() -> {
+                    sleep(100);
+                    robot.runLiftStack(0);
+                })
+                //.lineToSplineHeading(new Pose2d(-35,-15,Math.toRadians(90)))
+                .build();
+        Trajectory ConeStackV3 = drive.trajectoryBuilder(FirstCapRepoV3.end())
+                //.splineTo(new Vector2d(-35,-9.5),Math.toRadians(180))
+                .forward(21)
+                .build();
+        Trajectory ConeStackRetractV3 = drive.trajectoryBuilder(ConeStackV3.end())
+                .addDisplacementMarker(() -> {
+            robot.runLift(11);
+        })
+                .back(20)
+                .build();
+        Trajectory ConeStackRepoV3= drive.trajectoryBuilder(ConeStackRetractV3.end())
+                .lineToSplineHeading(new Pose2d(-35,-15,Math.toRadians(90)))
+                .build();
+        Trajectory SecondCapV3 = drive.trajectoryBuilder(ConeStackRetractV3.end())
+                .splineTo(new Vector2d(-29, -3.5), Math.toRadians(45))// lasat con
+                .build();
+        Trajectory SecondCapRepoV3 = drive.trajectoryBuilder(SecondCapV3.end())
+                .lineToSplineHeading(new Pose2d(-35,-9.5,Math.toRadians(180)))
+                .addDisplacementMarker(() -> {
+                    sleep(100);
+                    robot.runLiftStack(0);
+                })
+                //.lineToSplineHeading(new Pose2d(-35,-15,Math.toRadians(90)))
+                .build();
+        Trajectory ConeStackSecondV3 = drive.trajectoryBuilder(SecondCapRepoV3.end())
+                //.splineTo(new Vector2d(-35,-9.5),Math.toRadians(180))
+                .forward(21)
+                .build();
+        Trajectory ConeStackSecondRetractV3 = drive.trajectoryBuilder(ConeStackSecondV3.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(20)
+                .build();
+        Trajectory ThirdCapV3 = drive.trajectoryBuilder(ConeStackRetractV3.end())
+                .splineTo(new Vector2d(-29, -3.5), Math.toRadians(45))// lasat con
+                .build();
+        //
+        Trajectory trajFirstCapReposition = drive.trajectoryBuilder(trajFirstCap.end())
+                .back(14)
+                .build();
+        Trajectory trajConeStack = drive.trajectoryBuilder(trajFirstCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(135))))
+                .forward(27)
+                .build();
+        //Variant
+        Trajectory trajConeStackRepositionV2 = drive.trajectoryBuilder(ConeStackV3.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(50)
+                .build();
+        Trajectory trajSecondCapV2 = drive.trajectoryBuilder(trajConeStackRepositionV2.end())
+                .splineTo(new Vector2d(-22, -5), Math.toRadians(135))
+                .build();
+        Trajectory trajSecondCapRepositionV2 = drive.trajectoryBuilder(trajSecondCapV2.end())
+                .back(16).build();
+        Trajectory trajConeStack2V2 = drive.trajectoryBuilder(trajSecondCapRepositionV2.end())
+                .splineTo(new Vector2d(-27,trajConeStack.end().getY()),Math.toRadians(180))
+                .addDisplacementMarker(() -> {
+                    robot.runLiftStack(0);
+                })
+                .forward(-trajConeStack.end().getX()-27)
+                .build();
+        Trajectory trajConeStackReposition2V2 = drive.trajectoryBuilder(trajConeStack2V2.end())
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .back(50)
+                .build();
+        Trajectory trajThirdCapV2 = drive.trajectoryBuilder(trajConeStackReposition2V2.end())
+                .splineTo(new Vector2d(-21, -5), Math.toRadians(135))
+                .build();
+        //
+        Trajectory trajConeStackReposition = drive.trajectoryBuilder(trajConeStack.end())
+                .back(23)
+                .addDisplacementMarker(() -> {
+                    robot.runLift(11);
+                })
+                .build();
+        Trajectory trajSecondCap = drive.trajectoryBuilder(trajConeStackReposition.end().plus(new Pose2d(0, 0, Math.toRadians(-135)))).
+                forward(13)
+                .build();
+        Trajectory trajSecondCapReposition = drive.trajectoryBuilder(trajSecondCap.end())
+                .back(13).build();
+        Trajectory trajConeStack2 = drive.trajectoryBuilder(trajSecondCapReposition.end().plus(new Pose2d(0, 0, Math.toRadians(135))))
+                .forward(23)
+                .build();
+
+        Trajectory trajp0 = drive.trajectoryBuilder(trajSecondCapReposition.end())
+                .back(1)
+                .build();
+        Trajectory trajp1 = drive.trajectoryBuilder(trajSecondCapRepositionV2.end())
+                .splineTo(new Vector2d(-27,trajConeStack.end().getY()),Math.toRadians(135))
+                .build();
+        Trajectory trajp2 = drive.trajectoryBuilder(trajSecondCapRepositionV2.end())
+                .splineTo(new Vector2d(-13,trajConeStack.end().getY()),Math.toRadians(135))
+                .build();
+        Trajectory trajp3 = drive.trajectoryBuilder(trajSecondCapRepositionV2.end())
+                .back(1)
+                .build();
+                */
+ /* while(!tagFound && !opModeIsActive()) {
+       if(currentDetections.size() !=0)
+           for(AprilTagDetection tag : currentDetections)
+           {
+               if(tag.id ==1){tagFound=true;park=1;}
+                   else
+               if(tag.id == 10){tagFound=true;park=2;}
+                   else
+               if(tag.id == 19){tagFound=true;park=3;}
+                   else park=0;
+           }
+           telemetry.addData("park detection", park);
+       }*/
